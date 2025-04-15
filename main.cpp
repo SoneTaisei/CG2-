@@ -15,6 +15,9 @@
 #pragma comment(lib,"Dbghelp.lib")
 /* StringCcPrintfWを使うときに作る呼び出し*/
 #include<strsafe.h>
+/* 最後の警告を作るときに使う呼び出し*/
+#include <dxgidebug.h>
+#pragma comment(lib,"dxguid.lib")
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	/* メッセージに応じてゲーム固有の処理を行う*/
@@ -392,6 +395,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/* ゲームの処理*/
 
 		}
+	}
+
+	/*========================================================
+	＊DirectX12のオブジェクト解放処理
+	========================================================*/
+
+	CloseHandle(fenceEvent);
+	fence->Release();
+	rtvDescriptorHeap->Release();
+	swapChainResources[0]->Release();
+	swapChainResources[1]->Release();
+	swapChain->Release();
+	commandList->Release();
+	commandAllocator->Release();
+	commandQueue->Release();
+	device->Release();
+	useAdapter->Release();
+	dxgiFactory->Release();
+#ifdef _DEBUG
+	debugController->Release();
+#endif // _DEBUG
+	CloseWindow(hwnd);
+
+
+	/*========================================================
+	＊リソースが残っていないかのチェックをする
+	========================================================*/
+
+	IDXGIDebug1 *debug;
+	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+		debug->Release();
 	}
 
 	return 0;

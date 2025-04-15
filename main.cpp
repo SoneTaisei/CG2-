@@ -275,25 +275,68 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	/* これから書き込むバックバッファのインデックスを取得*/
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	/* TransitionBarrierの設定*/
+	D3D12_RESOURCE_BARRIER barrier{};
+	/* 今回のバリアはTransition*/
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	/* Noneにしておく*/
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	/* バリアを張る対象のリソース。現在のバックバッファに対して行う*/
+	barrier.Transition.pResource = swapChainResources[backBufferIndex];
+	/* 推移前のResourceState*/
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	/* 推移後のResouceState*/
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	/* TransitionBarrierを張る*/
+	commandList->ResourceBarrier(1, &barrier);
 	/* 描画先のRTVを設定する*/
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	/* 指定した色で画面全体をクリアにする*/
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+	/* RenderTargetからPresentにする*/
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	/* TransitionBarrier1を張る*/
+	commandList->ResourceBarrier(1, &barrier);
 	/* コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseする*/
 	hr = commandList->Close();
 	assert(SUCCEEDED(hr));
+
+	/* 初期値0でFenceを作る*/
+	ID3D12Fence *fence = nullptr;
+	uint64_t fenceValue = 0;
+	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	assert(SUCCEEDED(hr));
+
+	/* FenceのSignalを待つためのイベントを作成する*/
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(fenceEvent != nullptr);
 
 	/* GPUにコマンドリストの実行を行わせる*/
 	ID3D12CommandList *commandLists[] = { commandList };
 	commandQueue->ExecuteCommandLists(1, commandLists);
 	/* GPUとOSに画面の交換を行うように通知する*/
 	swapChain->Present(1, 0);
+	/* FEんせの値を更新*/
+	fenceValue++;
+	/* GPUがここまでたどり着いたときに、Fenceの値を指定した値を代入するようにSignalを送る*/
+	commandQueue->Signal(fence, fenceValue);
+	/* Fenceの値が指定したSignal値にたどり着いているか確認する
+	   GetCompletedValueの初期値はFence作成時に渡した初期値*/
+	if(fence->GetCompletedValue() < fenceValue) {
+		/* 指定したSignalにたどり着いていないのでたどり着くまで待つ設定*/
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		/* イベント待つ*/
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
 	/* 次のフレーム用のコマンドリストを準備*/
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator, nullptr);
 	assert(SUCCEEDED(hr));
+
 	
 
 	MSG msg{};

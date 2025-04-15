@@ -151,6 +151,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		wc.hInstance,        /*インスタンスハンドル*/
 		nullptr);            /*オプション*/
 
+#ifdef _DEBUG
+	ID3D12Debug1 *debugController = nullptr;
+	if(SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+		/* デバッグレイヤーを有効にする*/
+		debugController->EnableDebugLayer();
+		/* さらにGPU側でもチェックを行うようにする*/
+		debugController->SetEnableGPUBasedValidation(TRUE);
+
+	}
+#endif
+
 	/* ウィンドウを表示する*/
 	ShowWindow(hwnd, SW_SHOW);
 
@@ -201,7 +212,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 	/* デバイスの生成がうまくいかなかったので起動できない*/
 	assert(device != nullptr);
+	/* 初期化完了のログ*/
 	Log("Complete create D3D12Devie!!!\n");
+
+#ifdef _DEBUG
+	/*エラーが起きたら止める処理
+	========================================================*/
+	ID3D12InfoQueue *infoQueue = nullptr;
+	if(SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		/* 一番危険なエラーの時にとまる*/
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		/* エラーの時にとまる*/
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		/* 警告時にとまる*/
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		/* 解放*/
+		infoQueue->Release();
+		/* 制御するメッセージのID*/
+		D3D12_MESSAGE_ID denyIds[] = {
+			/* Windows11でのDXGIデバッグレイヤーとDX12デバッグレイヤーの相互作用バグによるエラーメッセージ*/
+			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+		};
+		/* 制御するレベル*/
+		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+		D3D12_INFO_QUEUE_FILTER filter{};
+		filter.DenyList.NumIDs = _countof(denyIds);
+		filter.DenyList.pIDList = denyIds;
+		filter.DenyList.NumSeverities = _countof(severities);
+		filter.DenyList.pSeverityList = severities;
+		/* 指定したメッセージの表示を制御する*/
+		infoQueue->PushStorageFilter(&filter);
+	}
+#endif
 
 	/*========================================================
 	＊画面を青くする

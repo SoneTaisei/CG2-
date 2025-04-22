@@ -602,13 +602,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   assert(SUCCEEDED(hr));
 
   // 頂点バッファビューを作成する
-  D3D12_VERTEX_BUFFER_VIEW verteexBufferView{};
+  D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
   // リソースの先頭アドレスから使う
-  verteexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+  vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
   // 使用するリソースのサイズは頂点3つ分のサイズ
-  verteexBufferView.SizeInBytes = sizeof(Vector4) * 3;
+  vertexBufferView.SizeInBytes = sizeof(Vector4) * 3;
   // 1頂点当たりのサイズ
-  verteexBufferView.StrideInBytes = sizeof(Vector4);
+  vertexBufferView.StrideInBytes = sizeof(Vector4);
 
   // 頂点リソースにデータを書き込む
   Vector4 *vertexData = nullptr;
@@ -639,17 +639,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   scissorRect.top = 0;
   scissorRect.bottom = kClientHeight;
 
-  commandList->RSSetViewports(1, &viewport);// Viewportを設定
-  commandList->RSSetScissorRects(1, &scissorRect);// Scirssorを設定
-  // RootSignatureを設定。POSに設定しているけど別設定が必要
-  commandList->SetGraphicsRootSignature(rootSignature);
-  commandList->SetPipelineState(graphicsPipelineState);// PSOを設定
-  commandList->IASetVertexBuffers(0, 1, &verteexBufferView);// VBVを設定
-  // 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておくとよい
-  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  // 描画！(DrawCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-  commandList->DrawInstanced(3, 1, 0, 0);
-
 
   MSG msg{};
   // ウィンドウのxボタンが押されるまでループ
@@ -660,10 +649,57 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
       DispatchMessage(&msg);
     } else {
       // ゲームの処理
+      backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+      // バリア Present → RenderTarget
+      barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+      barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+      barrier.Transition.pResource = swapChainResources[backBufferIndex];
+      barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+      barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+      commandList->ResourceBarrier(1, &barrier);
+
+      // 描画先セット＆クリア
+      commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
+      float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
       commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
-      // 描画！(DrawCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
+      // 描画コマンド
+      commandList->RSSetViewports(1, &viewport);
+      commandList->RSSetScissorRects(1, &scissorRect);
+      commandList->SetGraphicsRootSignature(rootSignature);
+      commandList->SetPipelineState(graphicsPipelineState);
+      commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+      commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
       commandList->DrawInstanced(3, 1, 0, 0);
+
+      // バリア RenderTarget → Present
+      barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+      barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+      commandList->ResourceBarrier(1, &barrier);
+
+      // 1. コマンドリストを閉じる
+      hr = commandList->Close();
+      assert(SUCCEEDED(hr));
+
+      // 2. コマンドリストを実行
+      ID3D12CommandList *commandLists[] = { commandList };
+      commandQueue->ExecuteCommandLists(1, commandLists);
+
+      // 3. 画面を表示
+      swapChain->Present(1, 0);
+
+      // --- GPUが終わるのを待つ ←ここ追加 ---
+      fenceValue++;
+      commandQueue->Signal(fence, fenceValue);
+      if(fence->GetCompletedValue() < fenceValue) {
+        fence->SetEventOnCompletion(fenceValue, fenceEvent);
+        WaitForSingleObject(fenceEvent, INFINITE);
+      }
+
+      // 4. 次のフレームに向けて準備（リセット）
+      commandAllocator->Reset();
+      commandList->Reset(commandAllocator, nullptr);
     }
   }
 

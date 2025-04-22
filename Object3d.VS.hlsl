@@ -1,6 +1,6 @@
 struct VertexShaderOutput{
     // 頂点シェーダー
-    float4 positon : SV_POSITION;
+    float4 position : SV_POSITION;
 };
 
 struct VertexShaderInput{
@@ -10,6 +10,6 @@ struct VertexShaderInput{
 
 VertexShaderOutput main(VertexShaderInput input){
     VertexShaderOutput output;
-    output.positon = input.position;
+    output.position = input.position;
     return output;
 }

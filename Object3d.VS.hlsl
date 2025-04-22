@@ -5,7 +5,7 @@ struct VertexShaderOutput{
 
 struct VertexShaderInput{
     // 三角形の頂点を入力
-    float4 position : POSITION;
+    float4 position : POSITION0;
 };
 
 VertexShaderOutput main(VertexShaderInput input){

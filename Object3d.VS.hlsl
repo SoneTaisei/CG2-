@@ -1,3 +1,7 @@
+struct TransformationMatrix {
+    float4 WVP;
+};
+
 struct VertexShaderOutput{
     // 頂点シェーダー
     float4 position : SV_POSITION;

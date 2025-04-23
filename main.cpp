@@ -26,6 +26,9 @@
 #include<dxcapi.h>
 #pragma comment(lib,"dxcompiler.lib")
 
+// Transformするための呼び出し
+#include "TransformFunctions.h"
+
 /*********************************************************
 *構造体
 *********************************************************/
@@ -695,6 +698,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
   // 今回は赤を書き込んでみる
   *materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+  /*********************************************************
+  *TransformationMatrix用のResourceを作る
+  *********************************************************/
+  // WVP用のリソースを作る。Matrix4x41つ分のサイズを用意する
+  ID3D12Resource *wvpResource = CreateBfferResource(device, sizeof(Matrix4x4));
+  // データを書き込む
+  Matrix4x4 *wvpData = nullptr;
+  // 書き込むためのアドレスを取得
+  wvpResource->Map(0, nullptr, reinterpret_cast<void **>(&wvpData));
+  // 谷行列を書き込んでおく
+  *wvpData;
+
 
   MSG msg{};
   // ウィンドウのxボタンが押されるまでループ

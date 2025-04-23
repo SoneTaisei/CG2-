@@ -1,10 +1,15 @@
-struct PixelShaderOutput{
+struct Material {
+    float4 calor;
+};
+
+ConstantBuffer<Material> gMaterial : register(b0);
+struct PixelShaderOutput {
     // ピクセルシェーダーを結合して出力する
     float4 color : SV_TARGET0;
 };
 
-PixelShaderOutput main(){
+PixelShaderOutput main() {
     PixelShaderOutput output;
-    output.color = float4(1.0, 1.0, 1.0, 1.0);
+    output.color = gMaterial.calor;
     return output;
 }

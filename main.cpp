@@ -189,6 +189,38 @@ IDxcBlob *CompileShader(
   return shaderBlob;
 }
 
+ID3D12Resource *CreateBfferResource(ID3D12Device *device, size_t sizeInBytes) {
+    assert(device != nullptr); // 安全チェック
+
+    // アップロード用のヒープの設定（CPUからGPUにデータを送る用）
+    D3D12_HEAP_PROPERTIES heapProperties{};
+    heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    // バッファリソースの設定
+    D3D12_RESOURCE_DESC resourceDesc{};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Width = sizeInBytes;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    // 実際にリソース（バッファ）を作成
+    ID3D12Resource *resource = nullptr;
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ, // 初期状態（読み取り用）
+        nullptr,
+        IID_PPV_ARGS(&resource)
+    );
+    assert(SUCCEEDED(hr)); // 成功してるか確認
+
+    return resource; // 作ったバッファを返す！
+}
+
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -318,7 +350,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #ifdef _DEBUG
   /*エラーが起きたら止める処理
-  ========================================================*/
+  *********************************************************/
   ID3D12InfoQueue *infoQueue = nullptr;
   if(SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
     // 一番危険なエラーの時にとまる
@@ -503,6 +535,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
   descriptionRootSignature.Flags =
     D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+  
+  // RootParameter作成。複数設定できるので。今回は結果1つだけなので長さ1の配列
+  D3D12_ROOT_PARAMETER rootParameters[1] = {};
+  rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;// CBVを使う
+  rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;// PixelShaderで使う
+  rootParameters[0].Descriptor.ShaderRegister = 0;// レジスタ番号0とバインド
+  descriptionRootSignature.pParameters = rootParameters;// ルートパラメータ配列へのポインタ
+  descriptionRootSignature.NumParameters = _countof(rootParameters);// 配列の長さ
+  
   // シリアライズしてバイナリする
   ID3DBlob *signatureBlob = nullptr;
   ID3DBlob *errorBlob = nullptr;
@@ -630,7 +671,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   viewport.TopLeftY = 0;// 描画開始位置(左上座標Y)
   viewport.MinDepth = 0.0f;// 深度値(物の近さ)の最小
   viewport.MaxDepth = 1.0f;// 深度値(物の近さ)の最大
-
+  
   // シザー矩形
   D3D12_RECT scissorRect{};
   // 基本的にビューポートと同じ矩形が構成されるようにする
@@ -639,6 +680,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   scissorRect.top = 0;
   scissorRect.bottom = kClientHeight;
 
+  /*********************************************************
+  *Material用のResourceを作る
+  *********************************************************/
+
+  // マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+  ID3D12Resource *materialResource = CreateBfferResource(device, sizeof(Vector4));
+  // マテリアルにデータを書き込む
+  Vector4 *materialData = nullptr;
+  // 書き込むためのアドレスを取得
+  materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
+  // 今回は赤を書き込んでみる
+  *materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 
   MSG msg{};
   // ウィンドウのxボタンが押されるまでループ
@@ -671,6 +724,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
       commandList->SetPipelineState(graphicsPipelineState);
       commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
       commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+      // マテリアルCBufferの場所を設定
+      commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
       commandList->DrawInstanced(3, 1, 0, 0);
 
       // バリア RenderTarget → Present
@@ -723,6 +778,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   debugController->Release();
 #endif // _DEBUG
   CloseWindow(hwnd);
+  materialResource->Release();
 
   // DirectX12のオブジェクト
   vertexResource->Release();

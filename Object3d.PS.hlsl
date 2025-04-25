@@ -1,5 +1,5 @@
 struct Material {
-    float4 calor;
+    float4 color;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
@@ -10,6 +10,6 @@ struct PixelShaderOutput {
 
 PixelShaderOutput main() {
     PixelShaderOutput output;
-    output.color = gMaterial.calor;
+    output.color = gMaterial.color;
     return output;
 }

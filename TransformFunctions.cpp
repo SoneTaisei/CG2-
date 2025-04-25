@@ -72,20 +72,6 @@ Matrix4x4 TransformFunctions::MakeScaleMatrix(const Vector3 &scale) {
 	return result;
 }
 
-Matrix4x4 TransformFunctions::Multiply(Matrix4x4 matrix1, Matrix4x4 matrix2) {
-	Matrix4x4 result = {};
-
-	for(int i = 0; i < 4; i++) {
-		for(int j = 0; j < 4; j++) {
-			for(int k = 0; k < 4; k++) {
-				result.m[i][j] += matrix1.m[i][k] * matrix2.m[k][j];
-			}
-		}
-	}
-
-	return result;
-}
-
 // 座標変換
 Vector3 TransformFunctions::Transform(const Vector3 &vector, const Matrix4x4 &matrix) {
 	Vector3 result;
@@ -125,4 +111,210 @@ Matrix4x4 TransformFunctions::MakeAffineMatrix(const Vector3 &scale, const Vecto
 
 	return result;
 
+}
+
+// 加法
+Matrix4x4 TransformFunctions::Add(const Matrix4x4 &matrix1, const Matrix4x4 &matrix2) {
+	Matrix4x4 result;
+
+	result.m[0][0] = matrix1.m[0][0] + matrix2.m[0][0];
+	result.m[0][1] = matrix1.m[0][1] + matrix2.m[0][1];
+	result.m[0][2] = matrix1.m[0][2] + matrix2.m[0][2];
+	result.m[0][3] = matrix1.m[0][3] + matrix2.m[0][3];
+	result.m[1][0] = matrix1.m[1][0] + matrix2.m[1][0];
+	result.m[1][1] = matrix1.m[1][1] + matrix2.m[1][1];
+	result.m[1][2] = matrix1.m[1][2] + matrix2.m[1][2];
+	result.m[1][3] = matrix1.m[1][3] + matrix2.m[1][3];
+	result.m[2][0] = matrix1.m[2][0] + matrix2.m[2][0];
+	result.m[2][1] = matrix1.m[2][1] + matrix2.m[2][1];
+	result.m[2][2] = matrix1.m[2][2] + matrix2.m[2][2];
+	result.m[2][3] = matrix1.m[2][3] + matrix2.m[2][3];
+	result.m[3][0] = matrix1.m[3][0] + matrix2.m[3][0];
+	result.m[3][1] = matrix1.m[3][1] + matrix2.m[3][1];
+	result.m[3][2] = matrix1.m[3][2] + matrix2.m[3][2];
+	result.m[3][3] = matrix1.m[3][3] + matrix2.m[3][3];
+
+	return result;
+}
+
+// 減法
+Matrix4x4 TransformFunctions::Subtract(const Matrix4x4 &matrix1, const Matrix4x4 &matrix2) {
+	Matrix4x4 result;
+
+	result.m[0][0] = matrix1.m[0][0] - matrix2.m[0][0];
+	result.m[0][1] = matrix1.m[0][1] - matrix2.m[0][1];
+	result.m[0][2] = matrix1.m[0][2] - matrix2.m[0][2];
+	result.m[0][3] = matrix1.m[0][3] - matrix2.m[0][3];
+	result.m[1][0] = matrix1.m[1][0] - matrix2.m[1][0];
+	result.m[1][1] = matrix1.m[1][1] - matrix2.m[1][1];
+	result.m[1][2] = matrix1.m[1][2] - matrix2.m[1][2];
+	result.m[1][3] = matrix1.m[1][3] - matrix2.m[1][3];
+	result.m[2][0] = matrix1.m[2][0] - matrix2.m[2][0];
+	result.m[2][1] = matrix1.m[2][1] - matrix2.m[2][1];
+	result.m[2][2] = matrix1.m[2][2] - matrix2.m[2][2];
+	result.m[2][3] = matrix1.m[2][3] - matrix2.m[2][3];
+	result.m[3][0] = matrix1.m[3][0] - matrix2.m[3][0];
+	result.m[3][1] = matrix1.m[3][1] - matrix2.m[3][1];
+	result.m[3][2] = matrix1.m[3][2] - matrix2.m[3][2];
+	result.m[3][3] = matrix1.m[3][3] - matrix2.m[3][3];
+
+	return result;
+}
+
+// 積
+Matrix4x4 TransformFunctions::Multiply(const Matrix4x4 &matrix1, const Matrix4x4 &matrix2) {
+	Matrix4x4 result;
+
+	result.m[0][0] = matrix1.m[0][0] * matrix2.m[0][0] + matrix1.m[0][1] * matrix2.m[1][0] + matrix1.m[0][2] * matrix2.m[2][0] + matrix1.m[0][3] * matrix2.m[3][0];
+	result.m[0][1] = matrix1.m[0][0] * matrix2.m[0][1] + matrix1.m[0][1] * matrix2.m[1][1] + matrix1.m[0][2] * matrix2.m[2][1] + matrix1.m[0][3] * matrix2.m[3][1];
+	result.m[0][2] = matrix1.m[0][0] * matrix2.m[0][2] + matrix1.m[0][1] * matrix2.m[1][2] + matrix1.m[0][2] * matrix2.m[2][2] + matrix1.m[0][3] * matrix2.m[3][2];
+	result.m[0][3] = matrix1.m[0][0] * matrix2.m[0][3] + matrix1.m[0][1] * matrix2.m[1][3] + matrix1.m[0][2] * matrix2.m[2][3] + matrix1.m[0][3] * matrix2.m[3][3];
+	result.m[1][0] = matrix1.m[1][0] * matrix2.m[0][0] + matrix1.m[1][1] * matrix2.m[1][0] + matrix1.m[1][2] * matrix2.m[2][0] + matrix1.m[1][3] * matrix2.m[3][0];
+	result.m[1][1] = matrix1.m[1][0] * matrix2.m[0][1] + matrix1.m[1][1] * matrix2.m[1][1] + matrix1.m[1][2] * matrix2.m[2][1] + matrix1.m[1][3] * matrix2.m[3][1];
+	result.m[1][2] = matrix1.m[1][0] * matrix2.m[0][2] + matrix1.m[1][1] * matrix2.m[1][2] + matrix1.m[1][2] * matrix2.m[2][2] + matrix1.m[1][3] * matrix2.m[3][2];
+	result.m[1][3] = matrix1.m[1][0] * matrix2.m[0][3] + matrix1.m[1][1] * matrix2.m[1][3] + matrix1.m[1][2] * matrix2.m[2][3] + matrix1.m[1][3] * matrix2.m[3][3];
+	result.m[2][0] = matrix1.m[2][0] * matrix2.m[0][0] + matrix1.m[2][1] * matrix2.m[1][0] + matrix1.m[2][2] * matrix2.m[2][0] + matrix1.m[2][3] * matrix2.m[3][0];
+	result.m[2][1] = matrix1.m[2][0] * matrix2.m[0][1] + matrix1.m[2][1] * matrix2.m[1][1] + matrix1.m[2][2] * matrix2.m[2][1] + matrix1.m[2][3] * matrix2.m[3][1];
+	result.m[2][2] = matrix1.m[2][0] * matrix2.m[0][2] + matrix1.m[2][1] * matrix2.m[1][2] + matrix1.m[2][2] * matrix2.m[2][2] + matrix1.m[2][3] * matrix2.m[3][2];
+	result.m[2][3] = matrix1.m[2][0] * matrix2.m[0][3] + matrix1.m[2][1] * matrix2.m[1][3] + matrix1.m[2][2] * matrix2.m[2][3] + matrix1.m[2][3] * matrix2.m[3][3];
+	result.m[3][0] = matrix1.m[3][0] * matrix2.m[0][0] + matrix1.m[3][1] * matrix2.m[1][0] + matrix1.m[3][2] * matrix2.m[2][0] + matrix1.m[3][3] * matrix2.m[3][0];
+	result.m[3][1] = matrix1.m[3][0] * matrix2.m[0][1] + matrix1.m[3][1] * matrix2.m[1][1] + matrix1.m[3][2] * matrix2.m[2][1] + matrix1.m[3][3] * matrix2.m[3][1];
+	result.m[3][2] = matrix1.m[3][0] * matrix2.m[0][2] + matrix1.m[3][1] * matrix2.m[1][2] + matrix1.m[3][2] * matrix2.m[2][2] + matrix1.m[3][3] * matrix2.m[3][2];
+	result.m[3][3] = matrix1.m[3][0] * matrix2.m[0][3] + matrix1.m[3][1] * matrix2.m[1][3] + matrix1.m[3][2] * matrix2.m[2][3] + matrix1.m[3][3] * matrix2.m[3][3];
+
+	return result;
+}
+
+// 逆行列
+Matrix4x4 TransformFunctions::Inverse(const Matrix4x4 &matrix) {
+	float determinant =
+		matrix.m[0][0] * matrix.m[1][1] * matrix.m[2][2] * matrix.m[3][3] +
+		matrix.m[0][0] * matrix.m[1][2] * matrix.m[2][3] * matrix.m[3][1] +
+		matrix.m[0][0] * matrix.m[1][3] * matrix.m[2][1] * matrix.m[3][2] -
+		matrix.m[0][0] * matrix.m[1][3] * matrix.m[2][2] * matrix.m[3][1] -
+		matrix.m[0][0] * matrix.m[1][2] * matrix.m[2][1] * matrix.m[3][3] -
+		matrix.m[0][0] * matrix.m[1][1] * matrix.m[2][3] * matrix.m[3][2] -
+		matrix.m[0][1] * matrix.m[1][0] * matrix.m[2][2] * matrix.m[3][3] -
+		matrix.m[0][2] * matrix.m[1][0] * matrix.m[2][3] * matrix.m[3][1] -
+		matrix.m[0][3] * matrix.m[1][0] * matrix.m[2][1] * matrix.m[3][2] +
+		matrix.m[0][3] * matrix.m[1][0] * matrix.m[2][2] * matrix.m[3][1] +
+		matrix.m[0][2] * matrix.m[1][0] * matrix.m[2][1] * matrix.m[3][3] +
+		matrix.m[0][1] * matrix.m[1][0] * matrix.m[2][3] * matrix.m[3][2] +
+		matrix.m[0][1] * matrix.m[1][2] * matrix.m[2][0] * matrix.m[3][3] +
+		matrix.m[0][2] * matrix.m[1][3] * matrix.m[2][0] * matrix.m[3][1] +
+		matrix.m[0][3] * matrix.m[1][1] * matrix.m[2][0] * matrix.m[3][2] -
+		matrix.m[0][3] * matrix.m[1][2] * matrix.m[2][0] * matrix.m[3][1] -
+		matrix.m[0][2] * matrix.m[1][1] * matrix.m[2][0] * matrix.m[3][3] -
+		matrix.m[0][1] * matrix.m[1][3] * matrix.m[2][0] * matrix.m[3][2] -
+		matrix.m[0][1] * matrix.m[1][2] * matrix.m[2][3] * matrix.m[3][0] -
+		matrix.m[0][2] * matrix.m[1][3] * matrix.m[2][1] * matrix.m[3][0] -
+		matrix.m[0][3] * matrix.m[1][1] * matrix.m[2][2] * matrix.m[3][0] +
+		matrix.m[0][3] * matrix.m[1][2] * matrix.m[2][1] * matrix.m[3][0] +
+		matrix.m[0][2] * matrix.m[1][1] * matrix.m[2][3] * matrix.m[3][0] +
+		matrix.m[0][1] * matrix.m[1][3] * matrix.m[2][2] * matrix.m[3][0];
+
+	float determinantRecp = 1.0f / determinant;
+	Matrix4x4 result;
+	result.m[0][0] =
+		determinantRecp * (
+			matrix.m[1][1] * matrix.m[2][2] * matrix.m[3][3] + matrix.m[1][2] * matrix.m[2][3] * matrix.m[3][1] + matrix.m[1][3] * matrix.m[2][1] * matrix.m[3][2] -
+			matrix.m[1][3] * matrix.m[2][2] * matrix.m[3][1] - matrix.m[1][2] * matrix.m[2][1] * matrix.m[3][3] - matrix.m[1][1] * matrix.m[2][3] * matrix.m[3][2]);
+	result.m[0][1] =
+		determinantRecp * (
+			-matrix.m[0][1] * matrix.m[2][2] * matrix.m[3][3] - matrix.m[0][2] * matrix.m[2][3] * matrix.m[3][1] - matrix.m[0][3] * matrix.m[2][1] * matrix.m[3][2] +
+			matrix.m[0][3] * matrix.m[2][2] * matrix.m[3][1] + matrix.m[0][2] * matrix.m[2][1] * matrix.m[3][3] + matrix.m[0][1] * matrix.m[2][3] * matrix.m[3][2]);
+	result.m[0][2] =
+		determinantRecp * (
+			matrix.m[0][1] * matrix.m[1][2] * matrix.m[3][3] + matrix.m[0][2] * matrix.m[1][3] * matrix.m[3][1] + matrix.m[0][3] * matrix.m[1][1] * matrix.m[3][2] -
+			matrix.m[0][3] * matrix.m[1][2] * matrix.m[3][1] - matrix.m[0][2] * matrix.m[1][1] * matrix.m[3][3] - matrix.m[0][1] * matrix.m[1][3] * matrix.m[3][2]);
+	result.m[0][3] =
+		determinantRecp * (
+			-matrix.m[0][1] * matrix.m[1][2] * matrix.m[2][3] - matrix.m[0][2] * matrix.m[1][3] * matrix.m[2][1] - matrix.m[0][3] * matrix.m[1][1] * matrix.m[2][2] +
+			matrix.m[0][3] * matrix.m[1][2] * matrix.m[2][1] + matrix.m[0][2] * matrix.m[1][1] * matrix.m[2][3] + matrix.m[0][1] * matrix.m[1][3] * matrix.m[2][2]);
+	result.m[1][0] =
+		determinantRecp * (
+			-matrix.m[1][0] * matrix.m[2][2] * matrix.m[3][3] - matrix.m[1][2] * matrix.m[2][3] * matrix.m[3][0] - matrix.m[1][3] * matrix.m[2][0] * matrix.m[3][2] +
+			matrix.m[1][3] * matrix.m[2][2] * matrix.m[3][0] + matrix.m[1][2] * matrix.m[2][0] * matrix.m[3][3] + matrix.m[1][0] * matrix.m[2][3] * matrix.m[3][2]);
+	result.m[1][1] =
+		determinantRecp * (
+			matrix.m[0][0] * matrix.m[2][2] * matrix.m[3][3] + matrix.m[0][2] * matrix.m[2][3] * matrix.m[3][0] + matrix.m[0][3] * matrix.m[2][0] * matrix.m[3][2] -
+			matrix.m[0][3] * matrix.m[2][2] * matrix.m[3][0] - matrix.m[0][2] * matrix.m[2][0] * matrix.m[3][3] - matrix.m[0][0] * matrix.m[2][3] * matrix.m[3][2]);
+	result.m[1][2] =
+		determinantRecp * (
+			-matrix.m[0][0] * matrix.m[1][2] * matrix.m[3][3] - matrix.m[0][2] * matrix.m[1][3] * matrix.m[3][0] - matrix.m[0][3] * matrix.m[1][0] * matrix.m[3][2] +
+			matrix.m[0][3] * matrix.m[1][2] * matrix.m[3][0] + matrix.m[0][2] * matrix.m[1][0] * matrix.m[3][3] + matrix.m[0][0] * matrix.m[1][3] * matrix.m[3][2]);
+	result.m[1][3] =
+		determinantRecp * (
+			matrix.m[0][0] * matrix.m[1][2] * matrix.m[2][3] + matrix.m[0][2] * matrix.m[1][3] * matrix.m[2][0] + matrix.m[0][3] * matrix.m[1][0] * matrix.m[2][2] -
+			matrix.m[0][3] * matrix.m[1][2] * matrix.m[2][0] - matrix.m[0][2] * matrix.m[1][0] * matrix.m[2][3] - matrix.m[0][0] * matrix.m[1][3] * matrix.m[2][2]);
+	result.m[2][0] =
+		determinantRecp * (
+			matrix.m[1][0] * matrix.m[2][1] * matrix.m[2][3] + matrix.m[1][1] * matrix.m[2][3] * matrix.m[3][1] + matrix.m[1][3] * matrix.m[2][0] * matrix.m[3][1] -
+			matrix.m[1][3] * matrix.m[2][1] * matrix.m[3][0] - matrix.m[1][1] * matrix.m[2][0] * matrix.m[3][3] - matrix.m[1][0] * matrix.m[2][3] * matrix.m[3][2]);
+	result.m[2][1] =
+		determinantRecp * (
+			-matrix.m[0][0] * matrix.m[2][1] * matrix.m[3][3] - matrix.m[0][1] * matrix.m[2][3] * matrix.m[3][0] - matrix.m[0][3] * matrix.m[2][0] * matrix.m[3][1] +
+			matrix.m[0][3] * matrix.m[2][1] * matrix.m[3][0] + matrix.m[0][1] * matrix.m[2][0] * matrix.m[3][3] + matrix.m[0][0] * matrix.m[2][3] * matrix.m[3][1]);
+	result.m[2][2] =
+		determinantRecp * (
+			matrix.m[0][0] * matrix.m[1][1] * matrix.m[3][3] + matrix.m[0][1] * matrix.m[1][3] * matrix.m[3][0] + matrix.m[0][3] * matrix.m[1][0] * matrix.m[3][1] -
+			matrix.m[0][3] * matrix.m[1][1] * matrix.m[3][0] - matrix.m[0][1] * matrix.m[1][0] * matrix.m[3][3] - matrix.m[0][0] * matrix.m[1][3] * matrix.m[3][1]);
+	result.m[2][3] =
+		determinantRecp * (
+			-matrix.m[0][0] * matrix.m[1][1] * matrix.m[2][3] - matrix.m[0][1] * matrix.m[1][3] * matrix.m[2][0] - matrix.m[0][3] * matrix.m[1][0] * matrix.m[2][1] +
+			matrix.m[0][3] * matrix.m[1][1] * matrix.m[2][0] + matrix.m[0][1] * matrix.m[1][0] * matrix.m[2][3] + matrix.m[0][0] * matrix.m[1][3] * matrix.m[2][1]);
+	result.m[3][0] =
+		determinantRecp * (
+			-matrix.m[1][0] * matrix.m[2][1] * matrix.m[3][2] - matrix.m[1][1] * matrix.m[2][2] * matrix.m[3][0] - matrix.m[1][2] * matrix.m[2][0] * matrix.m[3][1] +
+			matrix.m[1][2] * matrix.m[2][1] * matrix.m[3][0] + matrix.m[1][1] * matrix.m[2][0] * matrix.m[3][2] + matrix.m[1][0] * matrix.m[2][2] * matrix.m[3][1]);
+	result.m[3][1] =
+		determinantRecp * (
+			matrix.m[0][0] * matrix.m[2][1] * matrix.m[3][2] + matrix.m[0][1] * matrix.m[2][2] * matrix.m[3][0] + matrix.m[0][2] * matrix.m[2][0] * matrix.m[3][1] -
+			matrix.m[0][2] * matrix.m[2][1] * matrix.m[3][0] - matrix.m[0][1] * matrix.m[2][0] * matrix.m[3][2] - matrix.m[0][0] * matrix.m[2][2] * matrix.m[3][1]);
+	result.m[3][2] =
+		determinantRecp * (
+			-matrix.m[0][0] * matrix.m[1][1] * matrix.m[3][2] - matrix.m[0][1] * matrix.m[1][2] * matrix.m[3][0] - matrix.m[0][2] * matrix.m[1][0] * matrix.m[3][1] +
+			matrix.m[0][2] * matrix.m[1][1] * matrix.m[3][0] + matrix.m[0][1] * matrix.m[1][0] * matrix.m[3][2] + matrix.m[0][0] * matrix.m[1][2] * matrix.m[3][1]);
+	result.m[3][3] =
+		determinantRecp * (
+			matrix.m[0][0] * matrix.m[1][1] * matrix.m[2][2] + matrix.m[0][1] * matrix.m[1][2] * matrix.m[2][0] + matrix.m[0][2] * matrix.m[1][0] * matrix.m[2][1] -
+			matrix.m[0][2] * matrix.m[1][1] * matrix.m[2][0] - matrix.m[0][1] * matrix.m[1][0] * matrix.m[2][2] - matrix.m[0][0] * matrix.m[1][2] * matrix.m[2][1]);
+
+	return result;
+}
+
+// 転置行列
+Matrix4x4 TransformFunctions::Transpose(const Matrix4x4 &matrix) {
+	Matrix4x4 result;
+
+	result.m[0][0] = matrix.m[0][0];
+	result.m[0][1] = matrix.m[1][0];
+	result.m[0][2] = matrix.m[2][0];
+	result.m[0][3] = matrix.m[3][0];
+	result.m[1][0] = matrix.m[0][1];
+	result.m[1][1] = matrix.m[1][1];
+	result.m[1][2] = matrix.m[2][1];
+	result.m[1][3] = matrix.m[3][1];
+	result.m[2][0] = matrix.m[0][2];
+	result.m[2][1] = matrix.m[1][2];
+	result.m[2][2] = matrix.m[2][2];
+	result.m[2][3] = matrix.m[3][2];
+	result.m[3][0] = matrix.m[0][3];
+	result.m[3][1] = matrix.m[1][3];
+	result.m[3][2] = matrix.m[2][3];
+	result.m[3][3] = matrix.m[3][3];
+
+	return result;
+}
+
+// 単位行列の作成
+Matrix4x4 TransformFunctions::MakeIdentity4x4() {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = 1.0f;
+	result.m[2][2] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	return result;
 }

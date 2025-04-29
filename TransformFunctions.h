@@ -25,5 +25,7 @@ public:
 	static Matrix4x4 Inverse(const Matrix4x4 &m);
 	static Matrix4x4 Transpose(const Matrix4x4 &m);
 	static Matrix4x4 MakeIdentity4x4();
+	static Vector3 Cross(const Vector3 &v1, const Vector3 &v2);
+	// 1.透視投影行列
+	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 };
-

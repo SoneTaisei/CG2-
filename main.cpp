@@ -1090,8 +1090,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*更新処理
 			*********************************************************/
 
-			// Y軸を回転させる
-			transform.rotate.y += 0.03f;
+			
 			Matrix4x4 worldMatrix =
 				TransformFunctions::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			//*wvpData = worldMatrix;
@@ -1106,8 +1105,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*wvpData = worldViewProjectionMatrix;
 
 
-			/*ImGui::SliderFloat("z1", &vertexData[0].position.z, -1.0f, -1.0f);
-			ImGui::SliderFloat("z2", &vertexData[3].position.z, -1.0f, -1.0f);*/
+#ifdef _DEBUG
+			ImGui::Begin("Window");
+			ImGui::ColorEdit3("Color", &materialData->x);
+			/*if(ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
+				ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
+			}*/
+			if(ImGui::CollapsingHeader("objectCamera", ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::DragFloat3("Translate", &cameraTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("Rotate", &cameraTransform.rotate.x, 0.01f);
+				ImGui::DragFloat3("Scale", &cameraTransform.scale.x, 0.01f);
+			}
+			ImGui::End();
+#endif // _DEBUG
+
 			/*********************************************************
 			*描画処理
 			*********************************************************/

@@ -42,6 +42,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include"externals/DirectXTex/d3dx12.h"
 #include"vector"
 
+
+#ifdef _DEBUG
+ID3D12Debug1 *debugController = nullptr;
+#endif
+
 /*********************************************************
 *構造体
 *********************************************************/
@@ -264,7 +269,7 @@ ID3D12Resource *CreateBufferResource(ID3D12Device *device, size_t sizeInBytes) {
 	return resource; // 作ったバッファを返す！
 }
 
-// DescriptorHeapの作成関数
+// DescriptorHeapのサイズを取得するための関数
 ID3D12DescriptorHeap *CreateDescriptorHeap(
 	ID3D12Device *device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 	ID3D12DescriptorHeap *descriptorHeap = nullptr;
@@ -453,7 +458,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr);            //オプション
 
 #ifdef _DEBUG
-	ID3D12Debug1 *debugController = nullptr;
 	if(SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		// デバッグレイヤーを有効にする
 		debugController->EnableDebugLayer();
@@ -823,7 +827,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// どのように画面に色を打ち込むかの設定(気にしなくていい)
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-	
+
 	// DepthStencilStateの設定
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
 	// Depthの機能を有効化する
@@ -836,7 +840,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// DepthStencilの設定
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	
+
 	// 上で設定したものを実際に生成
 	ID3D12PipelineState *graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
@@ -945,16 +949,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 
 	// WVP用のリソースを作る。Matrix4x41つ分のサイズを用意する
-	ID3D12Resource *wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	ID3D12Resource *wvpResourceA = CreateBufferResource(device, sizeof(Matrix4x4));
+	ID3D12Resource *wvpResourceB = CreateBufferResource(device, sizeof(Matrix4x4));
 	// データを書き込む
-	Matrix4x4 *wvpData = nullptr;
+	Matrix4x4 *wvpDataA = nullptr;
+	Matrix4x4 *wvpDataB = nullptr;
 	// 書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void **>(&wvpData));
+	wvpResourceA->Map(0, nullptr, reinterpret_cast<void **>(&wvpDataA));
+	wvpResourceB->Map(0, nullptr, reinterpret_cast<void **>(&wvpDataB));
 	// 谷行列を書き込んでおく
-	*wvpData = TransformFunctions::MakeIdentity4x4();
+	*wvpDataA = TransformFunctions::MakeIdentity4x4();
+	*wvpDataB = TransformFunctions::MakeIdentity4x4();
 
 	// Transform変数を作る
-	Transform transform = {
+	Transform transformA = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
+	Transform transformB = {
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
@@ -1047,6 +1061,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+			if(msg.message == WM_QUIT) {
+				break;
+			}
 		} else {
 			// ImGuiにこれからフレームが始まる旨を告げる
 			ImGui_ImplDX12_NewFrame();
@@ -1090,9 +1107,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*更新処理
 			*********************************************************/
 
-			
-			Matrix4x4 worldMatrix =
-				TransformFunctions::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
+			Matrix4x4 worldMatrixA =
+				TransformFunctions::MakeAffineMatrix(transformA.scale, transformA.rotate, transformA.translate);
+			Matrix4x4 worldMatrixB =
+				TransformFunctions::MakeAffineMatrix(transformB.scale, transformB.rotate, transformB.translate);
+
 			//*wvpData = worldMatrix;
 			Matrix4x4 cameraMatrix =
 				TransformFunctions::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -1100,26 +1120,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				TransformFunctions::Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix =
 				TransformFunctions::MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix =
-				TransformFunctions::Multiply(worldMatrix, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
-			*wvpData = worldViewProjectionMatrix;
+			Matrix4x4 worldViewProjectionMatrixA =
+				TransformFunctions::Multiply(worldMatrixA, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
+			Matrix4x4 worldViewProjectionMatrixB =
+				TransformFunctions::Multiply(worldMatrixB, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
+
+			*wvpDataA = worldViewProjectionMatrixA;
+			*wvpDataB = worldViewProjectionMatrixB;
 
 
-#ifdef _DEBUG
 			ImGui::Begin("Window");
 			ImGui::ColorEdit3("Color", &materialData->x);
-			/*if(ImGui::CollapsingHeader("object", ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
-				ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
-			}*/
-			if(ImGui::CollapsingHeader("objectCamera", ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGui::DragFloat3("Translate", &cameraTransform.translate.x, 0.01f);
-				ImGui::DragFloat3("Rotate", &cameraTransform.rotate.x, 0.01f);
-				ImGui::DragFloat3("Scale", &cameraTransform.scale.x, 0.01f);
+			if(ImGui::CollapsingHeader("objectA", ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::DragFloat3("TranslateA", &transformA.translate.x, 0.01f);
+				ImGui::DragFloat3("RotateA", &transformA.rotate.x, 0.01f);
+				ImGui::DragFloat3("ScaleA", &transformA.scale.x, 0.01f);
+			}
+			if(ImGui::CollapsingHeader("objectB", ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::DragFloat3("TranslateB", &transformB.translate.x, 0.01f);
+				ImGui::DragFloat3("RotateB", &transformB.rotate.x, 0.01f);
+				ImGui::DragFloat3("ScaleB", &transformB.scale.x, 0.01f);
 			}
 			ImGui::End();
-#endif // _DEBUG
 
 			/*********************************************************
 			*描画処理
@@ -1136,10 +1158,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// wvp用のCbufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceA->GetGPUVirtualAddress());
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(3, 1, 0, 0);
+			
+			// マテリアルCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			// wvp用のCbufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceB->GetGPUVirtualAddress());
+			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->DrawInstanced(3, 1, 3, 0);
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();
@@ -1181,50 +1211,71 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/
 
-	CloseHandle(fenceEvent);
-	fence->Release();
-	rtvDescriptorHeap->Release();
-	swapChainResources[0]->Release();
-	swapChainResources[1]->Release();
-	swapChain->Release();
-	commandList->Release();
-	commandAllocator->Release();
-	commandQueue->Release();
-	useAdapter->Release();
-	dxgiFactory->Release();
-#ifdef _DEBUG
-	debugController->Release();
-#endif // _DEBUG
-	CloseWindow(hwnd);
-	materialResource->Release();
-	wvpResource->Release();
-
-	// DirectX12のオブジェクト
-	vertexResource->Release();
-	graphicsPipelineState->Release();
-	signatureBlob->Release();
-	if(errorBlob) {
-		errorBlob->Release();
-	}
-	rootSignature->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-
-	// テクスチャの開放
-	textureResource->Release();
-	depthStencilResource->Release();
+	// ImGuiリソース
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	// COMの終了処理
-	CoUninitialize();
+	// GPU関連
+	materialResource->Release();
+	wvpResourceA->Release();
+	wvpResourceB->Release();
+	vertexResource->Release();
+	textureResource->Release();
+	depthStencilResource->Release();
+
+	dsvDescriptorHeap->Release();
+	srvDescriptorHeap->Release();
+	rtvDescriptorHeap->Release();
+
+	// PSOやRootSignatureなどのグラフィックスパイプライン
+	graphicsPipelineState->Release();
+	rootSignature->Release();
+	signatureBlob->Release();
+	if(errorBlob) {
+		errorBlob->Release();
+	}
+
+	// Shaderバイナリ
+	vertexShaderBlob->Release();
+	pixelShaderBlob->Release();
+
+	// CommandリストやQueue
+	commandList->Release();
+	commandAllocator->Release();
+	commandQueue->Release();
+
+	// SwapChainとそのリソース
+	swapChainResources[0]->Release();
+	swapChainResources[1]->Release();
+	swapChain->Release();
+
+	// Fence
+	fence->Release();
+
+	// D3D12 Device本体
+	device->Release();
+
+	// DXGI FactorやADapter
+	useAdapter->Release();
+	dxgiFactory->Release();
+
+	// DXC関連
+	includeHandler->Release();
+	dxcCompiler->Release();
+	dxcUtils->Release();
+	
+
+	// window系ハンドル
+	CloseHandle(fenceEvent);
+	CloseWindow(hwnd);
+
 
 	/*********************************************************
 	*リソースが残っていないかのチェックをする
 	*********************************************************/
 
-	device->Release();
+#ifdef _DEBUG
 
 	IDXGIDebug1 *debug;
 	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
@@ -1233,6 +1284,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 		debug->Release();
 	}
+	
+	if(debugController) {
+		debugController->Release();
+	}
+#endif // _DEBUG
+
+	// COMの終了処理
+	CoUninitialize();
 
 	return 0;
 }

@@ -28,4 +28,6 @@ public:
 	static Vector3 Cross(const Vector3 &v1, const Vector3 &v2);
 	// 1.透視投影行列
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
+	// 2.正射影行列
+	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 };

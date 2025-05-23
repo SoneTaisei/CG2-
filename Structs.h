@@ -1,6 +1,10 @@
 #pragma once
 
 #include <Windows.h>
+
+#define _USE_MATH_DEFINES // M_PIなどの定数を使うために必要
+#include <cmath>          // sin, cos, M_PI など数学関数
+
 #include<format>
 #include <string>
 #include <cstdint>
@@ -43,6 +47,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 #include"externals/DirectXTex/d3dx12.h"
 #include"vector"
+
+
+
 
 /*********************************************************
 *構造体

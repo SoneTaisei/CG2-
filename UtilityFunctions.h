@@ -40,4 +40,10 @@ ID3D12Resource *UploadTextureData(ID3D12Resource *texture, const DirectX::Scratc
 
 ID3D12Resource *CreateDepthStencilTextureResource(ID3D12Device *device, int32_t width, int32_t height);
 
+// DescriptorHandleを取得する(CPU)
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap *descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+// DescriptorHandleを取得する(GPU)
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap *descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
 void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &indices, float radius, int latDiv, int lonDiv);

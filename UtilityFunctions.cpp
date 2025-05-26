@@ -309,3 +309,51 @@ ID3D12Resource *CreateDepthStencilTextureResource(ID3D12Device *device, int32_t 
 	assert(SUCCEEDED(hr));
 	return resource;
 }
+
+void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &indices, float radius, int latDiv, int lonDiv) {
+	// 緯度の分割数: 上から下へ何段に分けるか
+	// 経度の分割数: 横に何分割するか（赤道の輪切りみたいなイメージ）
+
+	// 頂点の生成（緯度方向にループ）
+	for(int lat = 0; lat <= latDiv; ++lat) {
+		float theta = lat * float(M_PI) / float(latDiv); // 緯度の角度（0 ~ π）
+		float sinTheta = sinf(theta);
+		float cosTheta = cosf(theta);
+
+		// 経度方向にループ
+		for(int lon = 0; lon <= lonDiv; ++lon) {
+			float phi = lon * 2.0f * float(M_PI) / float(lonDiv); // 経度の角度（0 ~ 2π）
+			float sinPhi = sinf(phi);
+			float cosPhi = cosf(phi);
+
+			// 球のx, y, z座標を求める
+			float x = cosPhi * sinTheta;
+			float y = cosTheta;
+			float z = sinPhi * sinTheta;
+
+			// 頂点データを作成
+			VertexData v{};
+			v.position = { radius * x, radius * y, radius * z, 1.0f }; // 球の表面上の点
+			v.texcoord = { float(lon) / lonDiv, float(lat) / latDiv }; // UV座標（テクスチャ用）
+
+			vertices.push_back(v); // 頂点リストに追加
+		}
+	} 
+	// 三角形インデックスの生成（頂点をつなぐ）
+	for(int lat = 0; lat < latDiv; ++lat) {
+		for(int lon = 0; lon < lonDiv; ++lon) {
+			// 現在の行・列から頂点の番号を計算
+			int first = lat * (lonDiv + 1) + lon;
+			int second = first + lonDiv + 1;
+
+			// 二つの三角形を使って四角形を埋める
+			indices.push_back(first);         // 左上
+			indices.push_back(first + 1);     // 右上
+			indices.push_back(second);        // 左下
+
+			indices.push_back(second);        // 左下
+			indices.push_back(first + 1);     // 右上
+			indices.push_back(second + 1);    // 右下
+		}
+	}
+}

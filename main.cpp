@@ -547,18 +547,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 谷行列を書き込んでおく
 	*wvpData = TransformFunctions::MakeIdentity4x4();
 
-	// Transform変数を作る
-	Transform transform = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
-
-	Transform cameraTransform = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,-5.0f}
-	};
+	
 
 	/*********************************************************
 	*sprite用のResourceを作る
@@ -614,7 +603,65 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 単位行列を書き込んでおく
 	*transformationMatrixDataSprite = TransformFunctions::MakeIdentity4x4();
 
-	Transform transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	
+
+	/*********************************************************
+	*球体を生成する
+	*********************************************************/
+
+	/*メッシュ生成
+	*********************************************************/
+
+	// 頂点とインデックスの配列を作成
+	std::vector<VertexData> sphereVertices;
+	std::vector<uint32_t> sphereIndices;
+	CreateSphereMesh(sphereVertices, sphereIndices, 1.0f, 16, 32); // 半径1.0, 縦16, 横32 分割
+
+	// 頂点バッファリソース作成
+	ID3D12Resource *vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * sphereVertices.size());
+
+	// 頂点データ書き込み
+	VertexData *mappedVertexData = nullptr;
+	vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void **>(&mappedVertexData));
+	std::memcpy(mappedVertexData, sphereVertices.data(), sizeof(VertexData) *sphereVertices.size());
+	vertexResourceSphere->Unmap(0, nullptr);
+
+	// 頂点バッファビュー作成
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
+	vertexBufferViewSphere.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
+	vertexBufferViewSphere.SizeInBytes = UINT(sizeof(VertexData) * sphereVertices.size());
+	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
+
+	/*resourceを生成する
+	*********************************************************/
+
+	// インデックスバッファリソース作成
+	ID3D12Resource *indexResourceSphere = CreateBufferResource(device, sizeof(uint32_t) * sphereIndices.size());
+
+	uint32_t *mappedIndexData = nullptr;
+	indexResourceSphere->Map(0, nullptr, reinterpret_cast<void **>(&mappedIndexData));
+	std::memcpy(mappedIndexData, sphereIndices.data(), sizeof(uint32_t) *sphereIndices.size());
+	indexResourceSphere->Unmap(0, nullptr);
+
+	// 球体用の TransformationMatrix のリソースを作る
+	ID3D12Resource *transformationMatrixResourceSphere = CreateBufferResource(device, sizeof(Matrix4x4));
+
+	// データを書き込むためのポインタ
+	Matrix4x4 *transformationMatrixDataSphere = nullptr;
+
+	// Map して書き込みアドレスを取得
+	transformationMatrixResourceSphere->Map(0, nullptr, reinterpret_cast<void **>(&transformationMatrixDataSphere));
+
+	// 初期値として単位行列を書いておく（あとで更新される）
+	*transformationMatrixDataSphere = TransformFunctions::MakeIdentity4x4();
+
+	// インデックスバッファビュー作成
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSphere{};
+	indexBufferViewSphere.BufferLocation = indexResourceSphere->GetGPUVirtualAddress();
+	indexBufferViewSphere.SizeInBytes = UINT(sizeof(uint32_t) * sphereIndices.size());
+	indexBufferViewSphere.Format = DXGI_FORMAT_R32_UINT;
+
+	UINT indexCount = static_cast<UINT>(sphereIndices.size());
 
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -689,6 +736,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	// DSVHeapの先頭にDSVを作る
 	device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	
+	/*********************************************************
+	*変数宣言
+	*********************************************************/
+
+	// Transform変数を作る
+	Transform transform = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
+	Transform cameraTransform = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,-5.0f}
+	};
+
+	Transform transformSprite = { 
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
+	Transform transformSphere = {
+		{1.0f, 1.0f, 1.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f}
+	};
 
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
@@ -705,6 +781,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 開発用UIの処理
 			ImGui::ShowDemoWindow();
+
+			ImGui::Begin("Window");
+			// 平行移動 (translate)
+			ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
+
+			// 回転 (rotate) - ラジアン単位、±π の範囲で表示
+			ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
+
+			// 拡大縮小 (scale)
+			ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
+			ImGui::End();
+
 
 			// ゲームの処理
 			backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -728,7 +816,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			// 描画先セット＆クリア
-			//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], FALSE, nullptr);
 			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
@@ -742,8 +829,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// Y軸を回転させる
 			transform.rotate.y += 0.03f;
 
+			/*camera用の座標変換
+			*********************************************************/
+
+			Matrix4x4 worldMatrix =
+				TransformFunctions::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 viewMatrix =
+				TransformFunctions::MakeIdentity4x4();
+			Matrix4x4 projectionMatrix =
+				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix =
+				TransformFunctions::Multiply(worldMatrix, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
+			//*transformationMatrixData = worldViewProjectionMatrix;
+
 			/*Sprite用の座標変換
 			*********************************************************/
+
 			Matrix4x4 worldMatrixSprite =
 				TransformFunctions::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite =
@@ -753,6 +854,46 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite =
 				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+
+			/*Sphere用の座標変換
+			*********************************************************/
+
+			// 1. カメラのビュー行列を計算（カメラTransformの逆行列）
+			Matrix4x4 viewMatrixSphere
+				= TransformFunctions::Inverse(
+					TransformFunctions::MakeAffineMatrix(
+						cameraTransform.scale,
+						cameraTransform.rotate,
+						cameraTransform.translate
+					)
+				);
+
+			// 2. パース投影行列を作成（FOV 45度、アスペクト比、near=0.1, far=100）
+			float aspect = float(kClientWidth) / float(kClientHeight);
+			Matrix4x4 projectionMatrixSphere
+				= TransformFunctions::MakePerspectiveFovMatrix(
+					45.0f * 3.14159265f / 180.0f, // ラジアン
+					aspect,
+					0.1f, 100.0f
+				);  // :contentReference[oaicite:2]{index=2}
+
+			// 3. ワールド→ビュー→投影をまとめてWVP行列に
+			Matrix4x4 worldMatrixSphere
+				= TransformFunctions::MakeAffineMatrix(
+					transformSphere.scale,
+					transformSphere.rotate,
+					transformSphere.translate
+				);
+
+			Matrix4x4 wvpSphere
+				= TransformFunctions::Multiply(
+					worldMatrixSphere,
+					TransformFunctions::Multiply(viewMatrixSphere, projectionMatrixSphere)
+				);
+
+
+			// 4. 定数バッファに書き込む
+			*transformationMatrixDataSphere = wvpSphere;
 			
 			/*********************************************************
 			*描画処理
@@ -771,7 +912,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
-			commandList->IASetIndexBuffer(&indexBufferView);
+
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+			commandList->IASetIndexBuffer(&indexBufferViewSphere);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSphere->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 
 			// Spriteの描画。変更が必要なものだけを変更する

@@ -1,5 +1,5 @@
 #include "TransformFunctions.h"
-#include<cmath>
+#include "Structs.h"
 #include"assert.h"
 
 Matrix4x4 TransformFunctions::MakeRoteXMatrix(float radian) {

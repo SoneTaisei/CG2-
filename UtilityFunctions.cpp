@@ -348,12 +348,12 @@ void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &
 
 			// 二つの三角形を使って四角形を埋める
 			indices.push_back(first);         // 左上
-			indices.push_back(second);        // 左下
 			indices.push_back(first + 1);     // 右上
+			indices.push_back(second);        // 左下
 
 			indices.push_back(second);        // 左下
-			indices.push_back(second + 1);    // 右下
 			indices.push_back(first + 1);     // 右上
+			indices.push_back(second + 1);    // 右下
 		}
 	}
 }

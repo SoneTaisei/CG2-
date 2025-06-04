@@ -73,7 +73,30 @@ struct  Transform {
 	Vector3 translate;
 };
 
+struct TransformMatrix {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+};
+
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector3 normal;
+};
+
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+};
+
+struct DirectionalLight {
+	Vector4 color;//!< ライトの色
+	Vector3 direction;//!< ライトの向き
+	float intensity;//!< 輝度
+};
+
+struct ViewProjection {
+	Matrix4x4 viewProjectionMatrix;
+	Vector3 cameraPosition;
+	float padding;  // ← これを忘れず追加！
 };

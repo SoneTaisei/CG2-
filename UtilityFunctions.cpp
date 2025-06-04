@@ -191,14 +191,15 @@ ID3D12Resource *CreateBufferResource(ID3D12Device *device, size_t sizeInBytes) {
 // DescriptorHeapの作成関数
 ID3D12DescriptorHeap *CreateDescriptorHeap(
 	ID3D12Device *device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
-	ID3D12DescriptorHeap *descriptorHeap = nullptr;
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-	descriptorHeapDesc.Type = heapType;
-	descriptorHeapDesc.NumDescriptors = numDescriptors;
-	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.Type = heapType;
+	desc.NumDescriptors = numDescriptors;
+	desc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	ID3D12DescriptorHeap *heap = nullptr;
+	HRESULT hr = device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap));
 	assert(SUCCEEDED(hr));
-	return descriptorHeap;
+	return heap;
 }
 
 // Textureデータを読む
@@ -350,6 +351,7 @@ void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &
 			// 頂点データを作成
 			VertexData v{};
 			v.position = { radius * x, radius * y, radius * z, 1.0f }; // 球の表面上の点
+			v.normal = { v.position.x,v.position.y,v.position.z };
 			v.texcoord = { float(lon) / lonDiv, float(lat) / latDiv }; // UV座標（テクスチャ用）
 
 			vertices.push_back(v); // 頂点リストに追加

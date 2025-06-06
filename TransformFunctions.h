@@ -30,4 +30,7 @@ public:
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 	// 2.正射影行列
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
+	static Vector3 Normalize(Vector3 v);
+
+
 };

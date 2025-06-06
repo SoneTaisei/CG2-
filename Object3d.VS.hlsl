@@ -1,20 +1,20 @@
 #include "object3d.hlsli"
-
-struct TransformationMatrix {
-    float4x4 WVP;
-};
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
 
+cbuffer gMaterial : register(b0) {
+    Material gMaterial;
+}
 
-struct VertexShaderInput{
-    // 三角形の頂点を入力
-    float4 position : POSITION0;
-    float2 texcoord : TEXCOORD0;
-};
+cbuffer gDirectionalLight : register(b4) {
+    DirectionalLight gDirectionalLight;
+}
 
-VertexShaderOutput main(VertexShaderInput input){
+VertexShaderOutput main(VertexShaderInput input) {
     VertexShaderOutput output;
+    
     output.position = mul(input.position, gTransformationMatrix.WVP);
     output.texcoord = input.texcoord;
+    output.normal = normalize(mul(input.normal, (float3x3) gTransformationMatrix.World));
+    
     return output;
 }

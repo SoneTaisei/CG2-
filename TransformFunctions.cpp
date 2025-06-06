@@ -353,3 +353,10 @@ Matrix4x4 TransformFunctions::MakeOrthographicMatrix(float left, float top, floa
 
 	return result;
 }
+
+// 正規化
+Vector3 TransformFunctions::Normalize(Vector3 v) {
+	float length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+	return { v.x / length, v.y / length, v.z / length };
+}
+

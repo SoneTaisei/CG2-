@@ -351,7 +351,7 @@ void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &
 			// 頂点データを作成
 			VertexData v{};
 			v.position = { radius * x, radius * y, radius * z, 1.0f }; // 球の表面上の点
-			v.normal = { v.position.x,v.position.y,v.position.z };
+			v.normal = TransformFunctions::Normalize({ v.position.x,v.position.y,v.position.z });
 			v.texcoord = { float(lon) / lonDiv, float(lat) / latDiv }; // UV座標（テクスチャ用）
 
 			vertices.push_back(v); // 頂点リストに追加

@@ -7,13 +7,13 @@ ConstantBuffer<Material> gMaterial : register(b0);
 
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
-cbuffer ViewProjection : register(b3) {
-    matrix viewProjectionMatrix; // 64バイト
-    float3 cameraPosition; // 12バイト
-    float padding; // 4バイト → 合計80バイト
-};
+//cbuffer ViewProjection : register(b3) {
+//    matrix viewProjectionMatrix; // 64バイト
+//    float3 cameraPosition; // 12バイト
+//    float padding; // 4バイト → 合計80バイト
+//};
 
-ConstantBuffer<ViewProjection> gViewProjection : register(b1);
+//ConstantBuffer<ViewProjection> gViewProjection : register(b1);
 
 struct PixelShaderOutput {
     // ピクセルシェーダーを結合して出力する
@@ -28,23 +28,22 @@ cbuffer TransformCB : register(b4) {
     TransformationMatrix transform;
 };
 
-cbuffer LightCB : register(b3) {
-    DirectionalLight light;
-};
+//cbuffer LightCB : register(b3) {
+//    DirectionalLight light;
+//};
 
-Texture2D tex : register(t3);
-SamplerState smp : register(s0);
+//SamplerState smp : register(s0);
 
 float4 main(VertexShaderOutput input) : SV_TARGET {
     float3 normal = normalize(input.normal);
-    float3 lightDir = normalize(-light.direction);
-    float cos = saturate(dot(normal, lightDir));
+    float3 lightDir = normalize(-gDirectionalLight.direction);
 
     // Lambert反射モデル
-    float4 textureColor = tex.Sample(smp, input.texcoord);
+    float4 textureColor = gTexture.Sample(gSampler, input.texcoord);
     float4 color;
 
-    if (gMaterial.enebleLighting != 0) {
+    if (gMaterial.enableLighting != 0) {
+        float cos = saturate(dot(normal, lightDir));
         color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
     } else {
         color = gMaterial.color * textureColor;

@@ -364,11 +364,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);// Tableで利用する数
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;// CBVを使う
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;// PixelShaderで使う
-	rootParameters[3].Descriptor.ShaderRegister = 1;// レジスタ番号1を使う
+	rootParameters[3].Descriptor.ShaderRegister = 3;// レジスタ番号1を使う
 	rootParameters[3].Descriptor.RegisterSpace = 0;
 	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[4].Descriptor.ShaderRegister = 3; // ← DirectionalLight に対応
+	rootParameters[4].Descriptor.ShaderRegister = 1; // ← DirectionalLight に対応
 	rootParameters[4].Descriptor.RegisterSpace = 0;
 	descriptionRootSignature.pParameters = rootParameters;// ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);// 配列の長さ
@@ -855,10 +855,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	bool useMonsterBall = true;
 
-
-
-
-
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
 	while(msg.message != WM_QUIT) {
@@ -887,6 +883,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// テクスチャ切り替え
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+			// ライティングを使うかの切り替え
+			ImGui::Checkbox("useLight", &materialData->enableLighting);
+			
+			// 謎
+			ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
+
+			// 光の位置を変える
+			ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+
+			// ライティングのカラー切り替え
+			ImGui::DragFloat4("LightingColor", &directionalLightData.color.x, 0.1f, 0.01f, 0.01f);
+
 
 			ImGui::End();
 
@@ -1030,6 +1039,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->SetGraphicsRootConstantBufferView(3, viewProjectionResource->GetGPUVirtualAddress());
 
+			// ライトの変更内容をGPUに書き戻す
+			*mappedDirectionalLightData = directionalLightData;
+
 			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 
 			// マテリアルCBufferの場所を指定
@@ -1042,7 +1054,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// TransformationMatrixCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画！
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();

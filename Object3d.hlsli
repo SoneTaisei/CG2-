@@ -14,6 +14,7 @@ struct VertexShaderInput {
 struct Material {
     float4 color;
     bool enableLighting;
+    float4x4 uvTransform;
 };
 
 struct TransformationMatrix {

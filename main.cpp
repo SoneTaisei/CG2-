@@ -347,7 +347,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;// offsetを自動計算
 
-	
+
 	// RootParameter作成。複数設定できるので。今回は結果1つだけなので長さ1の配列
 	D3D12_ROOT_PARAMETER rootParameters[5] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;// CBVを使う
@@ -479,7 +479,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 上で設定したものを実際に生成
 	ID3D12PipelineState *graphicsPipelineState = nullptr;
-	
+
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 
 
@@ -631,7 +631,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 左下
 	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[0].texcoord = { 0.0f,1.0f };
-	// 上
+	// 左上
 	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
 	// 右下
@@ -642,8 +642,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 
 	// 左下
-	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
+	vertexDataSprite[3].position = { 640.0f,0.0f,0.0f,1.0f };
+	vertexDataSprite[3].texcoord = { 1.0f,0.0f };
 	// 上
 	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };
 	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
@@ -676,7 +676,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::vector<VertexData> sphereVertices;
 
 	std::vector<uint32_t> sphereIndices;
-	CreateSphereMesh(sphereVertices, sphereIndices, 1.0f, 16, 32); // 半径1.0, 縦16, 横32 分割
+	CreateSphereMesh(sphereVertices, sphereIndices, 1.0f, 32, 32); // 半径1.0, 縦32, 横32 分割
 
 	// 頂点バッファリソース作成
 	ID3D12Resource *vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * sphereVertices.size());
@@ -739,6 +739,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexBufferViewSphere.Format = DXGI_FORMAT_R32_UINT;
 
 	UINT indexCount = static_cast<UINT>(sphereIndices.size());
+
+	/*********************************************************
+	*IndexResource(無駄を省いたスプライト)を作る
+	*********************************************************/
+
+	// Resource作成
+	ID3D12Resource *indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
+
+	// View作成
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite = {};
+	// リソースの先頭のアドレスから使う
+	indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+	// 使用吸うrリソースサイズはインデックス5つ分
+	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+	// インデックスはuint32_tとする
+	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
+	// インデックスリソースにデータを書き込む
+	uint32_t *indexDataSprite = nullptr;
+	indexResourceSprite->Map(0, nullptr, reinterpret_cast<void **>(&indexDataSprite));
+	indexDataSprite[0] = 0;
+	indexDataSprite[1] = 1;
+	indexDataSprite[2] = 2;
+	indexDataSprite[3] = 1;
+	indexDataSprite[4] = 3;
+	indexDataSprite[5] = 2;
+
 
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -853,7 +880,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f, 0.0f, 0.0f}
 	};
 
+	Transform uvTransformSprite{
+		{1.0f, 1.0f, 1.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f}
+	};
+
 	bool useMonsterBall = true;
+
+	materialData->uvTransform = TransformFunctions::MakeIdentity4x4();
+
+	materialDataSprite->uvTransform = TransformFunctions::MakeIdentity4x4();
 
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
@@ -886,7 +923,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ライティングを使うかの切り替え
 			ImGui::Checkbox("useLight", &materialData->enableLighting);
-			
+
 			// 謎
 			ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
 
@@ -895,6 +932,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ライティングのカラー切り替え
 			ImGui::DragFloat4("LightingColor", &directionalLightData.color.x, 0.1f, 0.01f, 0.01f);
+
+			// UVTransform
+			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			ImGui::SliderAngle("UVRRotate", &uvTransformSprite.rotate.x);
 
 
 			ImGui::End();
@@ -1002,7 +1044,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transformationMatrixDataSphere->WVP = wvpSphere;
 			transformationMatrixDataSphere->World = worldMatrixSphere;
 
+			/*UVTransformの座標変換
+			*********************************************************/
 
+			Matrix4x4 uvTransformMatrix = TransformFunctions::MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = TransformFunctions::Multiply(uvTransformMatrix, TransformFunctions::MakeRoteZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = TransformFunctions::Multiply(uvTransformMatrix, TransformFunctions::MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformMatrix;
 
 			/*********************************************************
 			*描画処理
@@ -1055,6 +1103,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画！
 			//commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->IASetIndexBuffer(&indexBufferViewSprite);
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();

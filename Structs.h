@@ -87,6 +87,8 @@ struct VertexData {
 struct Material {
 	Vector4 color;
 	bool enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
 };
 
 struct DirectionalLight {

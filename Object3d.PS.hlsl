@@ -39,7 +39,8 @@ float4 main(VertexShaderOutput input) : SV_TARGET {
     float3 lightDir = normalize(-gDirectionalLight.direction);
 
     // Lambert反射モデル
-    float4 textureColor = gTexture.Sample(gSampler, input.texcoord);
+    float4 transformedUV = mul(float4(input.texcoord,0.0f, 1.0f), gMaterial.uvTransform);
+    float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
     float4 color;
 
     if (gMaterial.enableLighting != 0) {

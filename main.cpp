@@ -1094,12 +1094,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	// MapしたリソースをすべてUnmapする
-	vertexResource->Unmap(0, nullptr);
-	wvpResource->Unmap(0, nullptr);
-	materialResource->Unmap(0, nullptr);
-	vertexResourceSprite->Unmap(0, nullptr);
-	transformationMatrixResourceSprite->Unmap(0, nullptr);
-
+	/*if(vertexResource) {
+		vertexResource->Unmap(0, nullptr);
+	}*/
+	if(wvpResource) {
+		wvpResource->Unmap(0, nullptr);
+	}
+	if(materialResource) {
+		materialResource->Unmap(0, nullptr);
+	}
+	if(vertexResourceSprite) {
+		vertexResourceSprite->Unmap(0, nullptr);
+	}
+	if(transformationMatrixResourceSprite) {
+		transformationMatrixResourceSprite->Unmap(0, nullptr);
+	}
 	/*********************************************************
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/

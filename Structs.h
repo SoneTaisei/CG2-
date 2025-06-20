@@ -48,6 +48,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include"externals/DirectXTex/d3dx12.h"
 #include"vector"
 
+#include <fstream>
+#include <sstream>
+
 
 
 
@@ -101,4 +104,13 @@ struct ViewProjection {
 	Matrix4x4 viewProjectionMatrix;
 	Vector3 cameraPosition;
 	float padding;  // ← これを忘れず追加！
+};
+
+struct ModelData {
+	std::vector<VertexData> vertices;
+	MaterialData material;
+};
+
+struct MaterialData {
+	std::string textureFilePath;
 };

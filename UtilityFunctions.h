@@ -47,3 +47,13 @@ D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap *descrip
 D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap *descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &indices, float radius, int latDiv, int lonDiv);
+
+/// <summary>
+/// objファイルを読む関数 
+/// </summary>
+/// <param name="directoryPath"></param>
+/// <param name="filename"></param>
+/// <returns></returns>
+ModelData LoadObjFile(const std::string &directoryPath, const std::string &filename);
+
+MaterialData LoadMaterialTemplateFile(const std::string &directoryPath, const std::string &filename);

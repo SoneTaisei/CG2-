@@ -771,7 +771,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("resources/axis", "axis.obj");
 	Log("modelData.vertices.size() = " + std::to_string(modelData.vertices.size()) + "\n");
 	// 頂点リソースを作る
 	ID3D12Resource *vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -812,13 +812,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12DescriptorHeap *descriptorHeaps[] = { srvDescriptorHeap };
 
 	// Textureを読んで転送する
-	const int textureCount = 2;
-	DirectX::ScratchImage mipImages[textureCount] = { LoadTexture("resources/uvChecker.png"),LoadTexture("resources/monsterBall.png") };
-	const DirectX::TexMetadata metadata[textureCount] = { mipImages[0].GetMetadata(),mipImages[1].GetMetadata() };
-	ID3D12Resource *textureResource[textureCount] = { CreateTextureResource(device, metadata[0]),CreateTextureResource(device, metadata[1]) };
+	const int textureCount = 3;
+	DirectX::ScratchImage mipImages[textureCount] = { LoadTexture("resources/uvChecker.png"),LoadTexture("resources/monsterBall.png"),LoadTexture(modelData.material.textureFilePath) };
+	const DirectX::TexMetadata metadata[textureCount] = { mipImages[0].GetMetadata(),mipImages[1].GetMetadata(),mipImages[2].GetMetadata() };
+	ID3D12Resource *textureResource[textureCount] = { CreateTextureResource(device, metadata[0]),CreateTextureResource(device, metadata[1]),CreateTextureResource(device, metadata[2]) };
 	ID3D12Resource *intermediateResource[textureCount] = {
 		UploadTextureData(textureResource[0], mipImages[0], device, commandList),
-		UploadTextureData(textureResource[1], mipImages[1], device, commandList)
+		UploadTextureData(textureResource[1], mipImages[1], device, commandList),
+		UploadTextureData(textureResource[2], mipImages[2], device, commandList)
 	};
 
 	// コマンドを閉じる
@@ -853,8 +854,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDesc[i].Texture2D.MipLevels = UINT(metadata[i].mipLevels);
 	}
 	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[textureCount] = { GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1),GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2) };
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[textureCount] = { GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1),GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2) };
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[textureCount] = { GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1),GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2),GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3) };
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[textureCount] = { GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1),GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2),GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3) };
 	for(int i = 0; i < textureCount; ++i) {
 		// SRVの生成
 		device->CreateShaderResourceView(textureResource[i], &srvDesc[i], textureSrvHandleCPU[i]);

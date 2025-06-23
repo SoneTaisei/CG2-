@@ -106,11 +106,13 @@ struct ViewProjection {
 	float padding;  // ← これを忘れず追加！
 };
 
+struct MaterialData {
+	std::string textureFilePath;
+};
+
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
 };
 
-struct MaterialData {
-	std::string textureFilePath;
-};
+

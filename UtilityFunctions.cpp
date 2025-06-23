@@ -204,6 +204,9 @@ ID3D12DescriptorHeap *CreateDescriptorHeap(
 
 // Textureデータを読む
 DirectX::ScratchImage LoadTexture(const std::string &filePath) {
+	// ★ ファイルパス確認用のログ
+	OutputDebugStringA(("LoadTexture: " + filePath + "\n").c_str());
+	
 	// テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = ConvertString(filePath);
@@ -432,10 +435,13 @@ ModelData LoadObjFile(const std::string &directoryPath, const std::string &filen
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
 
-		} else if(identifier == "mtllid") {
+		} else if(identifier == "mtllib") {
 			// materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
 			s >> materialFilename;
+
+			OutputDebugStringA(("LoadMaterialTemplateFile: " + directoryPath + "/" + materialFilename + "\n").c_str());
+
 			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
 			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
 		}
@@ -462,7 +468,9 @@ MaterialData LoadMaterialTemplateFile(const std::string &directoryPath, const st
 			s >> textureFilename;
 			// 連結してファイルパスにする
 			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		
+			OutputDebugStringA(("Material Texture Path: " + materialData.textureFilePath + "\n").c_str());
 		}
 	}
-	return MaterialData();
+	return materialData;
 }

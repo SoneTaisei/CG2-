@@ -771,7 +771,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("resources/axis", "axis.obj");
 	Log("modelData.vertices.size() = " + std::to_string(modelData.vertices.size()) + "\n");
 	// 頂点リソースを作る
 	ID3D12Resource *vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());

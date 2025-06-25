@@ -81,6 +81,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debugController->SetEnableGPUBasedValidation(TRUE);
 
 	}
+
+	
+
 #endif
 
 	// ウィンドウを表示する
@@ -116,6 +119,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(useAdapter != nullptr);
 
 	ID3D12Device *device = nullptr;
+	
+
 	// 機能レベルとログ出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
 	  D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
@@ -506,10 +511,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	// 実際に頂点リソースを作る
 	ID3D12Resource *vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
-	hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-		IID_PPV_ARGS(&vertexResource));
-	assert(SUCCEEDED(hr));
 
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
@@ -839,6 +840,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	intermediateResource[0]->Release();
 	intermediateResource[1]->Release();
+	intermediateResource[2]->Release();
 
 	// 次のコマンドのためにリセット
 	commandAllocator->Reset();
@@ -1232,17 +1234,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	if(transformationMatrixResourceSprite) {
 		transformationMatrixResourceSprite->Unmap(0, nullptr);
 	}
+	if(directionalLightResource) {
+		directionalLightResource->Unmap(0, nullptr);
+	}
+	if(materialResourceSprite) {
+		materialResourceSprite->Unmap(0, nullptr);
+	}
+	if(viewProjectionResource) {
+		viewProjectionResource->Unmap(0, nullptr);
+	}
+	if(transformationMatrixResourceModel) {
+		transformationMatrixResourceModel->Unmap(0, nullptr);
+	}
+	if(transformationMatrixResourceSphere) {
+		transformationMatrixResourceSphere->Unmap(0, nullptr);
+	}
+	if(vertexResourceModel) {
+		vertexResourceModel->Unmap(0, nullptr);
+	}
+	/*if(vertexResourceSphere) {
+		vertexResourceSphere->Unmap(0, nullptr);
+	}*/
+	/*if(indexResourceSphere) {
+		indexResourceSphere->Unmap(0, nullptr);
+	}*/
+	if(indexResourceSprite) {
+		indexResourceSprite->Unmap(0, nullptr);
+	}
+
 	/*********************************************************
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/
 
-	// ======== ImGui解放 ============
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-
 	// ======== 各種解放 ============
 	// 順序に注意（ImGuiより先に使ってる srv/dsvHeap は後）
+	CloseHandle(fenceEvent);
+	fence->Release();
 	vertexResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
@@ -1267,33 +1294,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	commandList->Release();
 	commandAllocator->Release();
 	commandQueue->Release();
-	fence->Release();
-	CloseHandle(fenceEvent);
+	
 	useAdapter->Release();
 	dxgiFactory->Release();
 	dxcUtils->Release();
 	dxcCompiler->Release();
 	includeHandler->Release();
-	directionalLightResource->Unmap(0, nullptr);
+	//directionalLightResource->Unmap(0, nullptr);
 	directionalLightResource->Release();
 
+	vertexResourceModel->Release();
+	transformationMatrixResourceModel->Release();
+
+	vertexResourceSphere->Release();
+	indexResourceSphere->Release();
+	transformationMatrixResourceSphere->Release();
+
+	indexResourceSprite->Release();
+
+	viewProjectionResource->Release();
+	materialResourceSprite->Release();
+
+	imguiSrvDescriptorHeap->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
 #endif
-
-
-	// ======== Liveオブジェクトチェック ============ ←ここに移動
-	IDXGIDebug1 *debug = nullptr;
-	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->Release();
-	}
 
 	// ======== deviceを最後に解放 ============
 	device->Release();
 
 	// ======== COMの終了処理 ============
 	CoUninitialize();
+
+	// ======== ImGui解放 ============
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	// ======== Liveオブジェクトチェック ============ ←ここに移動
+	IDXGIDebug1 *debug = nullptr;
+	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+		Log("Reporting Live Objects...\n");
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+		HRESULT hr_report = debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+		Log(std::format("ReportLiveObjects() returned: 0x{:08X}\n", static_cast<uint32_t>(hr_report)));
+		debug->Release();
+	}
+
+	
 	return 0;
 }

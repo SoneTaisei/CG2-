@@ -51,7 +51,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <fstream>
 #include <sstream>
 
-
+#include <wrl.h>
 
 
 /*********************************************************

@@ -65,3 +65,19 @@ SoundData SoundLoadWave(const char *filename);
 void SoundUnload(SoundData *soundData);
 
 void SoundPlayWave(IXAudio2 *xAudio2, const SoundData &soundData);
+
+/*キー入力の取得
+*********************************************************/
+
+// 押されている時
+bool IsKeyHeld(BYTE keys);
+
+// キーが離された瞬間
+bool IsKeyReleased(BYTE keys, BYTE preKeys);
+
+// キーが押された瞬間
+bool IsKeyPressed(BYTE keys, BYTE preKeys);
+
+// 押されていないとき
+bool IsKeyUp(BYTE keys);
+

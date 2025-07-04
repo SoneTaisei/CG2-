@@ -17,6 +17,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 予期せぬ事態(Unhandled)に補足する関数を登録
 	SetUnhandledExceptionFilter(ExportDump);
 
+	/*********************************************************
+	*WindowsAPIの初期化
+	*********************************************************/
+
 	WNDCLASS wc{};
 	// ウィンドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
@@ -91,7 +95,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ウィンドウを表示する
 	ShowWindow(hwnd, SW_SHOW);
 
+	/*********************************************************
+	*DirectX初期化処理
+	*********************************************************/
+	HRESULT result;
 
+	IDirectInput8 *directInput = nullptr;
+	result = DirectInput8Create(
+		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		(void **)&directInput, nullptr
+	);
+	assert(SUCCEEDED(result));
+
+	// キーボードデバイスの生成
+	IDirectInputDevice8 *keyboard = nullptr;
+	result =
+		directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+	assert(SUCCEEDED(result));
+
+	// 入力データ形式のセット
+	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
+	assert(SUCCEEDED(result));
+
+	// 排他制御レベルのセット
+	result = keyboard->SetCooperativeLevel(
+		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY
+	);
+	assert(SUCCEEDED(result));
 
 	// DXGIファクトリーの生成
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
@@ -880,7 +910,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IXAudio2MasteringVoice *masterVoice;
 
 	// XAudioエンジンのインスタンスを生成
-	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
 	result = xAudio2->CreateMasteringVoice(&masterVoice);
 
 	SoundData soundData1 = SoundLoadWave("resources/Alarm.wav");
@@ -935,6 +965,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	materialDataSprite->uvTransform = TransformFunctions::MakeIdentity4x4();
 
+
+	// 全キーの入力状態を取得する
+	BYTE keys[256] = {};
+	BYTE preKeys[256] = {};
+
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
 	while(msg.message != WM_QUIT) {
@@ -987,6 +1022,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::End();
 
+			keyboard->Acquire();
+			keyboard->GetDeviceState(sizeof(keys), keys);
 
 			// ゲームの処理
 			backBufferIndex = swapChain.Get()->GetCurrentBackBufferIndex();
@@ -1181,7 +1218,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// TransformationMatrixCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
+			if(IsKeyReleased(keys[DIK_SPACE],preKeys[DIK_SPACE])) {
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
+			}
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 			//commandList->DrawInstanced(6, 1, 0, 0);

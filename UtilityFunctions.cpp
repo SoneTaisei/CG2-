@@ -587,3 +587,32 @@ void SoundPlayWave(IXAudio2 *xAudio2, const SoundData &soundData) {
 	result = pSourceVoice->Start();
 
 }
+
+bool IsKeyHeld(BYTE keys) {
+	if(keys) {
+		return true;
+	}
+	return false;
+}
+
+bool IsKeyReleased(BYTE keys, BYTE preKeys) {
+	if(!keys && preKeys) {
+		return true;
+	}
+	return false;
+}
+
+bool IsKeyPressed(BYTE keys, BYTE preKeys) {
+	if(keys && !preKeys) {
+		return true;
+	}
+	return false;
+}
+
+bool IsKeyUp(BYTE keys) {
+	if(!keys) {
+		return true;
+	}
+	return false;
+}
+

@@ -872,7 +872,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// DescriptorSizeを取得しておく
 	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
+	/*********************************************************
+	*音声出力をする
+	*********************************************************/
+	
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	IXAudio2MasteringVoice *masterVoice;
 
+	// XAudioエンジンのインスタンスを生成
+	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	result = xAudio2->CreateMasteringVoice(&masterVoice);
+
+	SoundData soundData1 = SoundLoadWave("resources/Alarm.wav");
+	SoundPlayWave(xAudio2.Get(), soundData1);
 
 
 
@@ -1211,7 +1223,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
+	xAudio2.Reset();
 
+	SoundUnload(&soundData1);
 
 	// MapしたリソースをすべてUnmapする
 	/*if(vertexResource) {

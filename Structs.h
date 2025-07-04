@@ -53,6 +53,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 #include <wrl.h>
 
+#include<xaudio2.h>
+
+#pragma comment(lib,"xaudio2.lib")
 
 /*********************************************************
 *構造体
@@ -113,6 +116,30 @@ struct MaterialData {
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+};
+
+struct ChunkHeader {
+	char id[4];// チャンク毎のID
+	int32_t size;// チャンクサイズ
+};
+
+struct RiffHeader {
+	ChunkHeader chunk;// "RIFF"
+	char type[4];// "WAVE"
+};
+
+struct FormatChunk {
+	ChunkHeader chunk;// "fmt"
+	WAVEFORMATEX fmt;// 波形フォーマット
+};
+
+struct SoundData {
+	// 波形フォーマット
+	WAVEFORMATEX wfex;
+	// バッファの先頭アドレス
+	BYTE *pBuffer;
+	// バッファのサイズ
+	unsigned int bufferSize;
 };
 
 

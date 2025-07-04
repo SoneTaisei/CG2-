@@ -59,3 +59,9 @@ void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &
 ModelData LoadObjFile(const std::string &directoryPath, const std::string &filename);
 
 MaterialData LoadMaterialTemplateFile(const std::string &directoryPath, const std::string &filename);
+
+SoundData SoundLoadWave(const char *filename);
+
+void SoundUnload(SoundData *soundData);
+
+void SoundPlayWave(IXAudio2 *xAudio2, const SoundData &soundData);

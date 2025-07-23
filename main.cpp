@@ -1078,35 +1078,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 worldMatrixSprite =
 				TransformFunctions::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite =
-				TransformFunctions::MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite =
-				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite =
 				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 			/*Sphere用の座標変換
 			*********************************************************/
-
-			// 1. カメラのビュー行列を計算（カメラTransformの逆行列）
-			Matrix4x4 viewMatrixSphere
-				= TransformFunctions::Inverse(
-					TransformFunctions::MakeAffineMatrix(
-						cameraTransform.scale,
-						cameraTransform.rotate,
-						cameraTransform.translate
-					)
-				);
-
-			// 2. パース投影行列を作成（FOV 45度、アスペクト比、near=0.1, far=100）
-			float aspect = float(kClientWidth) / float(kClientHeight);
-			Matrix4x4 projectionMatrixSphere
-				= TransformFunctions::MakePerspectiveFovMatrix(
-					45.0f * 3.14159265f / 180.0f, // ラジアン
-					aspect,
-					0.1f, 100.0f
-				);  // :contentReference[oaicite:2]{index=2}
 
 			// 3. ワールド→ビュー→投影をまとめてWVP行列に
 			Matrix4x4 worldMatrixSphere

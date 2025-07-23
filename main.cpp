@@ -1,4 +1,5 @@
 #include"Utilityfunctions.h"
+#include"DebugCamera.h"
 
 
 const int kWindowWidth = 1280;
@@ -202,6 +203,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		infoQueue->PushStorageFilter(&filter);
 	}
 #endif
+
+	/*********************************************************
+	*デバッグカメラの作成
+	*********************************************************/
+
+	DebugCamera debugCamera;
+
 
 	/*********************************************************
 	*画面を青くする
@@ -819,6 +827,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	transformationMatrixResourceModel->Map(0, nullptr, reinterpret_cast<void **>(&transformationMatrixDataModel));
 
 
+	// カメラの初期化
+	Matrix4x4 initViewMatrix = TransformFunctions::MakeIdentity4x4();
+	float aspect = float(kClientWidth) / float(kClientHeight);
+	Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f * 3.14159265f, aspect, 0.1f, 100.0f);
+
+	debugCamera.Initialize(initViewMatrix, initProjectionMatrix,kClientWidth,kClientHeight);
+
+
 
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -978,6 +994,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		} else {
+
 			// ImGuiにこれからフレームが始まる旨を告げる
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -987,14 +1004,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::ShowDemoWindow();
 
 			ImGui::Begin("Window");
+
 			// 平行移動 (translate)
-			ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
+			ImGui::DragFloat3("TranslateSphere", &transformSphere.translate.x, 0.1f);
 
 			// 回転 (rotate) - ラジアン単位、±π の範囲で表示
-			ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
+			ImGui::DragFloat3("RotateSphere", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
 
 			// 拡大縮小 (scale)
-			ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
+			ImGui::DragFloat3("ScaleSphere", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
 
 			// テクスチャ切り替え
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
@@ -1021,6 +1039,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			ImGui::End();
+
+			// カメラの呼び出し
+			debugCamera.Update();
 
 			keyboard->Acquire();
 			keyboard->GetDeviceState(sizeof(keys), keys);
@@ -1063,12 +1084,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*camera用の座標変換
 			*********************************************************/
 
+			//Matrix4x4 viewMatrixSphere = debugCamera.GetViewMatrix();
+			//Matrix4x4 projectionMatrixSphere = debugCamera.GetProjectionMatrix();
+
+
 			Matrix4x4 worldMatrix =
 				TransformFunctions::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrix =
+				TransformFunctions::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix =
-				TransformFunctions::MakeIdentity4x4();
+				debugCamera.GetViewMatrix();
 			Matrix4x4 projectionMatrix =
-				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+				debugCamera.GetProjectionMatrix();
 			Matrix4x4 worldViewProjectionMatrix =
 				TransformFunctions::Multiply(worldMatrix, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
 			//*transformationMatrixData = worldViewProjectionMatrix;
@@ -1078,35 +1105,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 worldMatrixSprite =
 				TransformFunctions::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite =
-				TransformFunctions::MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite =
-				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite =
-				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrixSprite, projectionMatrixSprite));
+				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 			/*Sphere用の座標変換
 			*********************************************************/
-
-			// 1. カメラのビュー行列を計算（カメラTransformの逆行列）
-			Matrix4x4 viewMatrixSphere
-				= TransformFunctions::Inverse(
-					TransformFunctions::MakeAffineMatrix(
-						cameraTransform.scale,
-						cameraTransform.rotate,
-						cameraTransform.translate
-					)
-				);
-
-			// 2. パース投影行列を作成（FOV 45度、アスペクト比、near=0.1, far=100）
-			float aspect = float(kClientWidth) / float(kClientHeight);
-			Matrix4x4 projectionMatrixSphere
-				= TransformFunctions::MakePerspectiveFovMatrix(
-					45.0f * 3.14159265f / 180.0f, // ラジアン
-					aspect,
-					0.1f, 100.0f
-				);  // :contentReference[oaicite:2]{index=2}
 
 			// 3. ワールド→ビュー→投影をまとめてWVP行列に
 			Matrix4x4 worldMatrixSphere
@@ -1119,7 +1123,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 wvpSphere
 				= TransformFunctions::Multiply(
 					worldMatrixSphere,
-					TransformFunctions::Multiply(viewMatrixSphere, projectionMatrixSphere)
+					TransformFunctions::Multiply(viewMatrix,projectionMatrix)
 				);
 
 
@@ -1145,25 +1149,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					transformModel.translate
 				);
 
-			Matrix4x4 viewMatrixModel =
-				TransformFunctions::Inverse(
-					TransformFunctions::MakeAffineMatrix(
-						cameraTransform.scale,
-						cameraTransform.rotate,
-						cameraTransform.translate
-					)
-				);
-
-			Matrix4x4 projectionMatrixModel =
-				TransformFunctions::MakePerspectiveFovMatrix(
-					45.0f * 3.14159265f / 180.0f,
-					float(kClientWidth) / float(kClientHeight),
-					0.1f, 100.0f
-				);
-
 			Matrix4x4 wvpModel =
 				TransformFunctions::Multiply(worldMatrixModel,
-					TransformFunctions::Multiply(viewMatrixModel, projectionMatrixModel));
+					TransformFunctions::Multiply(viewMatrix, projectionMatrix));
 
 			transformationMatrixDataModel->WVP = wvpModel;
 			transformationMatrixDataModel->World = worldMatrixModel;
@@ -1206,7 +1194,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ライトの変更内容をGPUに書き戻す
 			*mappedDirectionalLightData = directionalLightData;
 
-			//commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			// 球の描画
+			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 
 			// マテリアルCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());

@@ -137,6 +137,18 @@ Matrix4x4 TransformFunctions::Add(const Matrix4x4 &matrix1, const Matrix4x4 &mat
 	return result;
 }
 
+Vector3 TransformFunctions::AddV(const Vector3 a, const Vector3 b) {
+	Vector3 result = {};
+
+	result = {
+		a.x + b.x,
+		a.y + b.y,
+		a.z + b.z,
+	};
+
+	return result;
+}
+
 // 減法
 Matrix4x4 TransformFunctions::Subtract(const Matrix4x4 &matrix1, const Matrix4x4 &matrix2) {
 	Matrix4x4 result;
@@ -161,6 +173,14 @@ Matrix4x4 TransformFunctions::Subtract(const Matrix4x4 &matrix1, const Matrix4x4
 	return result;
 }
 
+Vector3 TransformFunctions::SubtractV(const Vector3 &a, const Vector3 &b) {
+	return {
+		a.x - b.x,
+		a.y - b.y,
+		a.z - b.z
+	};
+}
+
 // 積
 Matrix4x4 TransformFunctions::Multiply(const Matrix4x4 &matrix1, const Matrix4x4 &matrix2) {
 	Matrix4x4 result;
@@ -181,6 +201,18 @@ Matrix4x4 TransformFunctions::Multiply(const Matrix4x4 &matrix1, const Matrix4x4
 	result.m[3][1] = matrix1.m[3][0] * matrix2.m[0][1] + matrix1.m[3][1] * matrix2.m[1][1] + matrix1.m[3][2] * matrix2.m[2][1] + matrix1.m[3][3] * matrix2.m[3][1];
 	result.m[3][2] = matrix1.m[3][0] * matrix2.m[0][2] + matrix1.m[3][1] * matrix2.m[1][2] + matrix1.m[3][2] * matrix2.m[2][2] + matrix1.m[3][3] * matrix2.m[3][2];
 	result.m[3][3] = matrix1.m[3][0] * matrix2.m[0][3] + matrix1.m[3][1] * matrix2.m[1][3] + matrix1.m[3][2] * matrix2.m[2][3] + matrix1.m[3][3] * matrix2.m[3][3];
+
+	return result;
+}
+
+Vector3 TransformFunctions::MultiplyV(float scalar, Vector3 vector) {
+	Vector3 result = {};
+
+	result = {
+		vector.x * scalar,
+		vector.y * scalar,
+		vector.z * scalar
+	};
 
 	return result;
 }
@@ -349,6 +381,19 @@ Matrix4x4 TransformFunctions::MakeOrthographicMatrix(float left, float top, floa
 		0.0f,2.0f / (top - bottom),0.0f,0.0f,
 		0.0f,0.0f,1.0f / (farClip - nearClip),0.0f,
 		(left + right) / (left - right),(top + bottom) / (bottom - top),nearClip / (nearClip - farClip),1.0f
+	};
+
+	return result;
+}
+
+Matrix4x4 TransformFunctions::MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
+	Matrix4x4 result = {};
+
+	result = {
+		width / 2.0f,0.0f,0.0f,0.0f,
+		0.0f,-height / 2.0f,0.0f,0.0f,
+		0.0f,0.0f,maxDepth - minDepth,0.0f,
+		left + width / 2.0f,top + height / 2.0f,minDepth,1.0f
 	};
 
 	return result;

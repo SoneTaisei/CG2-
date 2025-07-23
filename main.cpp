@@ -995,10 +995,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
-			// カメラの呼び出し
-			debugCamera.Update();
-
-
 			// ImGuiにこれからフレームが始まる旨を告げる
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -1008,15 +1004,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::ShowDemoWindow();
 
 			ImGui::Begin("Window");
-
-			//// 平行移動 (translate)
-			//ImGui::DragFloat3("Translate", &cameraTransform.translate.x, 0.1f);
-
-			//// 回転 (rotate) - ラジアン単位、±π の範囲で表示
-			//ImGui::DragFloat3("Rotate", &cameraTransform.rotate.x, 0.01f, -3.14f, 3.14f);
-
-			//// 拡大縮小 (scale)
-			//ImGui::DragFloat3("Scale", &cameraTransform.scale.x, 0.1f, 0.01f, 10.0f);
 
 			// 平行移動 (translate)
 			ImGui::DragFloat3("TranslateSphere", &transformSphere.translate.x, 0.1f);
@@ -1052,6 +1039,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			ImGui::End();
+
+			// カメラの呼び出し
+			debugCamera.Update();
 
 			keyboard->Acquire();
 			keyboard->GetDeviceState(sizeof(keys), keys);

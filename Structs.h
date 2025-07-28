@@ -121,6 +121,7 @@ struct MaterialData {
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+	std::vector<uint32_t> indices;
 };
 
 struct ChunkHeader {

@@ -807,7 +807,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources/axis", "axis.obj");
+	ModelData modelData = LoadObjFile("resources/plane", "plane.obj");
 	Log("modelData.vertices.size() = " + std::to_string(modelData.vertices.size()) + "\n");
 	// 頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel = CreateBufferResource(device.Get(), sizeof(VertexData) * modelData.vertices.size());
@@ -816,6 +816,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferViewModel.BufferLocation = vertexResourceModel->GetGPUVirtualAddress();
 	vertexBufferViewModel.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	vertexBufferViewModel.StrideInBytes = sizeof(VertexData);
+
+	// 1. モデルのインデックスデータ用のリソースを作成
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceModel =
+		CreateBufferResource(device.Get(), sizeof(uint32_t) * modelData.indices.size());
+
+	// 2. インデックスバッファビューを作成
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewModel = {};
+	indexBufferViewModel.BufferLocation = indexResourceModel->GetGPUVirtualAddress();
+	indexBufferViewModel.SizeInBytes = UINT(sizeof(uint32_t) * modelData.indices.size());
+	indexBufferViewModel.Format = DXGI_FORMAT_R32_UINT;
+
+	// 3. インデックスリソースにデータを書き込む
+	uint32_t *mappedIndexDataModel = nullptr;
+	indexResourceModel->Map(0, nullptr, reinterpret_cast<void **>(&mappedIndexDataModel));
+	std::memcpy(mappedIndexDataModel, modelData.indices.data(), sizeof(uint32_t) * modelData.indices.size());
+	indexResourceModel->Unmap(0, nullptr); // MapしたらUnmapを忘れずに
+
 
 	// 頂点リソースにデータを書き込む
 	VertexData *vertexDataModel = nullptr;
@@ -1000,43 +1017,72 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
+#ifdef _DEBUG
+
 			// 開発用UIの処理
 			ImGui::ShowDemoWindow();
 
+#endif // DEBUG_
+
+
 			ImGui::Begin("Window");
 
-			// 平行移動 (translate)
-			ImGui::DragFloat3("TranslateSphere", &transformSphere.translate.x, 0.1f);
+			// Sphere
+			if(ImGui::TreeNode("Sphere")) {
+				
+				// 平行移動 (translate)
+				ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
 
-			// 回転 (rotate) - ラジアン単位、±π の範囲で表示
-			ImGui::DragFloat3("RotateSphere", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
+				// 回転 (rotate) - ラジアン単位、±π の範囲で表示
+				ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
 
-			// 拡大縮小 (scale)
-			ImGui::DragFloat3("ScaleSphere", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
+				// 拡大縮小 (scale)
+				ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
 
-			// テクスチャ切り替え
-			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+				// テクスチャ切り替え
+				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-			// ライティングを使うかの切り替え
-			ImGui::Checkbox("useLight", &materialData->enableLighting);
+				// ライティングを使うかの切り替え
+				ImGui::Checkbox("useLight", &materialData->enableLighting);
 
-			// 謎
-			ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
+				// 謎
+				ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
 
-			// 光の位置を変える
-			ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+				// 光の位置を変える
+				ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
 
-			// ライティングのカラー切り替え
-			ImGui::DragFloat4("LightingColor", &directionalLightData.color.x, 0.1f, 0.01f, 0.01f);
+				// ライティングのカラー切り替え
+				ImGui::DragFloat4("LightingColor", &directionalLightData.color.x, 0.1f, 0.01f, 0.01f);
 
-			// 
-			ImGui::DragFloat3("ModelRotate", &transformModel.rotate.x, 0.1f, 0.01f, 0.01f);
+				ImGui::TreePop();
+			}
 
-			// UVTransform
-			ImGui::DragFloat3("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat3("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat3("UVRotate", &uvTransformSprite.rotate.x);
+			// OBJModel
+			if(ImGui::TreeNode("Model")) {
+				
+				// transformModel
+				ImGui::DragFloat3("Translate", &transformModel.translate.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat3("Scale", &transformModel.scale.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat3("Rotate", &transformModel.rotate.x,0.01f, -10.0f, 10.0f);
 
+
+				//// UVTransform
+				//ImGui::DragFloat3("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+				//ImGui::DragFloat3("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+				//ImGui::DragFloat3("UVRotate", &uvTransformSprite.rotate.x,0.01f, -10.0f, 10.0f);
+
+				ImGui::TreePop();
+			}
+
+			if(ImGui::TreeNode("Sprite")) {
+
+				// transformModel
+				ImGui::DragFloat3("Translate", &transformSprite.translate.x, 1.0f, 0.0f, 1280.0f);
+				ImGui::DragFloat3("Scale", &transformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat3("Rotate", &transformSprite.rotate.x, 0.01f, -10.0f, 10.0f);
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
 
@@ -1079,7 +1125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*********************************************************/
 
 			// Y軸を回転させる
-			transform.rotate.y += 0.03f;
+			//transform.rotate.y += 0.03f;
 
 			/*camera用の座標変換
 			*********************************************************/
@@ -1105,8 +1151,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 worldMatrixSprite =
 				TransformFunctions::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			Matrix4x4 viewMatrixSprite =
+				TransformFunctions::MakeIdentity4x4();
+			Matrix4x4 projectionMatrixSprite =
+				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite =
-				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
+				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 			/*Sphere用の座標変換
@@ -1194,27 +1244,58 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ライトの変更内容をGPUに書き戻す
 			*mappedDirectionalLightData = directionalLightData;
 
-			// 球の描画
-			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			/*********************************************************
+			*球の描画
+			*********************************************************/
+			{
+				// 1. 球用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = useMonsterBall ? textureSrvHandleGPU[1] : textureSrvHandleGPU[0];
+				commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSphere->GetGPUVirtualAddress());
 
-			// マテリアルCBufferの場所を指定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+				// 2. 球の頂点・インデックスバッファを設定
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+				commandList->IASetIndexBuffer(&indexBufferViewSphere);
 
-			// Spriteの描画。変更が必要なものだけを変更する
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[0]);
-			// TransformationMatrixCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			// 描画
-			if(IsKeyReleased(keys[DIK_SPACE],preKeys[DIK_SPACE])) {
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
+				// 3. 球を描画
+				commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 			}
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
-			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-			//commandList->DrawInstanced(6, 1, 0, 0);
-			commandList->IASetIndexBuffer(&indexBufferViewSprite);
-			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+			/*********************************************************
+			*モデルの描画
+			*********************************************************/
+			{
+				// 1. モデル用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
+				// ※ materialResource は現在、球とモデルで共通のものを使っています。モデル専用のマテリアルを作ることもできます。
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]); // modelDataから読み込んだテクスチャ
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
+
+				// 2. モデルの頂点・インデックスバッファを設定
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+				commandList->IASetIndexBuffer(&indexBufferViewModel);
+
+				// 3. モデルを描画
+				commandList->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
+			}
+
+			/*********************************************************
+			*スプライトの描画
+			*********************************************************/
+			{
+				// 1. スプライト用のリソースを設定
+				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // マテリアル
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // 座標変換行列
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[0]); // テクスチャ（ここではuvChecker.pngを使用）
+
+				// 2. スプライトの頂点・インデックスバッファを設定
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+				commandList->IASetIndexBuffer(&indexBufferViewSprite);
+
+				// 3. スプライトを描画（インデックス6個）
+				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			}
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();

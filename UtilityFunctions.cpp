@@ -1,4 +1,5 @@
 #include "UtilityFunctions.h"
+#include <map>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	if(ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
@@ -380,21 +381,24 @@ void CreateSphereMesh(std::vector<VertexData> &vertices, std::vector<uint32_t> &
 }
 
 ModelData LoadObjFile(const std::string &directoryPath, const std::string &filename) {
-	ModelData modelData;// 構築するModelData
-	std::vector<Vector4>positions;// 位置
-	std::vector<Vector3>normals;// 法線
-	std::vector<Vector2>texcoords;// テクスチャの座標
-	std::string line;// ファイルから読んだ1行を格納する
+	ModelData modelData;      // 構築するModelData
+	std::vector<Vector4> positions; // .objファイルから読み込んだ位置情報
+	std::vector<Vector3> normals;   // .objファイルから読み込んだ法線情報
+	std::vector<Vector2> texcoords; // .objファイルから読み込んだテクスチャ座標情報
+	std::string line;         // ファイルから読んだ1行を格納する
 
-	std::ifstream file(directoryPath + "/" + filename);//ファイルを開く
-	assert(file.is_open());// 開けなかったら止める
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // 開けなかったら止める
+
+	// "v/vt/vn" の文字列をキーに、作成済み頂点のインデックスを値として保持するmap
+	std::map<std::string, uint32_t> vertexMap;
 
 	while(std::getline(file, line)) {
 		std::string identifier;
 		std::istringstream s(line);
-		s >> identifier;// 先頭の識別子を読む
+		s >> identifier; // 先頭の識別子を読む
 
-		// identifierに応じた処理
+		// 識別子に応じた処理
 		if(identifier == "v") {
 			Vector4 position;
 			s >> position.x >> position.y >> position.z;
@@ -403,52 +407,62 @@ ModelData LoadObjFile(const std::string &directoryPath, const std::string &filen
 		} else if(identifier == "vt") {
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
+			// V座標を反転させる
+			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
 		} else if(identifier == "vn") {
 			Vector3 normal;
 			s >> normal.x >> normal.y >> normal.z;
+			// X成分を反転させる
+			normal.x *= -1.0f;
 			normals.push_back(normal);
 		} else if(identifier == "f") {
-			// 面は三角形限定。その他は未対応
-			VertexData triangle[3];
-			for(int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+			// 面のデータ。3頂点（1トライアングル）ずつ処理する
+			for(int32_t i = 0; i < 3; ++i) {
 				std::string vertexDefinition;
-				s >> vertexDefinition;
-				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
-				for(int32_t element = 0; element < 3; ++element) {
-					std::string index;
-					std::getline(v, index, '/');
-					elementIndices[element] = std::stoi(index);
+				s >> vertexDefinition; // "v/vt/vn" の組を読み込む
+
+				// この頂点（v/vt/vnの組み合わせ）が初めて登場したかチェック
+				if(vertexMap.find(vertexDefinition) == vertexMap.end()) {
+					// --- 新しい頂点の場合 ---
+					// 1. 新しいVertexDataを作成して modelData.vertices に追加
+					VertexData vertex;
+					std::istringstream v(vertexDefinition);
+					uint32_t posIndex, uvIndex, normIndex;
+					char slash; // スラッシュを読み飛ばす
+
+					v >> posIndex >> slash >> uvIndex >> slash >> normIndex;
+
+					// .objは1から、C++のvectorは0からインデックスが始まるので-1する
+					vertex.position = positions[posIndex - 1];
+					vertex.texcoord = texcoords[uvIndex - 1];
+					vertex.normal = normals[normIndex - 1];
+
+					modelData.vertices.push_back(vertex);
+
+					// 2. 新しく作った頂点のインデックスをmapとindicesベクターに追加
+					uint32_t newIndex = static_cast<uint32_t>(modelData.vertices.size() - 1);
+					modelData.indices.push_back(newIndex);
+					vertexMap[vertexDefinition] = newIndex; // mapに登録
+				} else {
+					// --- 既に登場済みの頂点の場合 ---
+					// mapからインデックスを取得して modelData.indices に追加するだけ
+					modelData.indices.push_back(vertexMap[vertexDefinition]);
 				}
-				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
-				normal.x *= -1.0f;
-				texcoord.y = 1.0f - texcoord.y;
-				triangle[faceVertex] = { position,texcoord,normal };
 			}
-			// 頂点を逆順で登録数rことで、周り順を逆にする
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
+			// 元のコードの巻き順を再現するため、インデックスを並び替える (ABC -> ACB)
+			size_t last = modelData.indices.size() - 1;
+			std::swap(modelData.indices[last], modelData.indices[last - 1]);
 
 		} else if(identifier == "mtllib") {
 			// materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
 			s >> materialFilename;
-
-			OutputDebugStringA(("LoadMaterialTemplateFile: " + directoryPath + "/" + materialFilename + "\n").c_str());
-
-			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			// ディレクトリ名とファイル名を渡してマテリアルを読み込む
 			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
 		}
 	}
-
 	return modelData;
-
 }
 
 MaterialData LoadMaterialTemplateFile(const std::string &directoryPath, const std::string &filename) {

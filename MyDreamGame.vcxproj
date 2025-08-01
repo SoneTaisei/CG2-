@@ -103,6 +103,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyGameApp.cpp" />
+    <ClCompile Include="Object3D.cpp" />
     <ClCompile Include="ResourceObject.cpp" />
     <ClCompile Include="TransformFunctions.cpp" />
     <ClCompile Include="UtilityFunctions.cpp" />
@@ -134,6 +135,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="MyGameApp.h" />
+    <ClInclude Include="Object3D.h" />
     <ClInclude Include="ResourceObject.h" />
     <ClInclude Include="Structs.h" />
     <ClInclude Include="TransformFunctions.h" />

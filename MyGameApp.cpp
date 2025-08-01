@@ -772,7 +772,7 @@ void MyGameApp::LoadAssets() {
 	materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData->enableLighting = 0;
+	materialData->lightingType = 0;
 
 	/*********************************************************
 	*DirectionalLight用のResourceを作る
@@ -821,7 +821,7 @@ void MyGameApp::LoadAssets() {
 
 	// 初期設定：色は白、ライティングは無効
 	materialDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialDataSprite->enableLighting = false;
+	materialDataSprite->lightingType = false;
 
 	ID3D12Resource *vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 	// 頂点BufferViewを作成する

@@ -38,19 +38,23 @@ float4 main(VertexShaderOutput input) : SV_TARGET {
     float3 normal = normalize(input.normal);
     float3 lightDir = normalize(-gDirectionalLight.direction);
 
-    // Lambert反射モデル
-    float4 transformedUV = mul(float4(input.texcoord,0.0f, 1.0f), gMaterial.uvTransform);
+    float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
     float4 color;
 
-    if (gMaterial.enableLighting != 0) {
-        // HalfLambertでライティングの影を滑らかにする
-        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+    float NdotL = dot(normal, lightDir);
+
+    // lightingType の値に応じてライティングを切り替える
+    if (gMaterial.lightingType == 2) { // 2: Half Lambert
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
         color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
-    } else {
+    } else if (gMaterial.lightingType == 1) { // 1: Lambert
+        // saturateは値を0.0f-1.0fの範囲にクランプする関数
+        float cos = saturate(NdotL);
+        color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+    } else { // 0: Lighting なし
         color = gMaterial.color * textureColor;
     }
-    
+
     return color;
 }

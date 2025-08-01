@@ -436,7 +436,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
-		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+									 D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 	if(FAILED(hr)) {
 		Log(reinterpret_cast<char *>(errorBlob->GetBufferPointer()));
 		assert(false);
@@ -444,8 +444,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// バイナリを元に生成
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	hr = device->CreateRootSignature(0,
-		signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(),
-		IID_PPV_ARGS(&rootSignature));
+									 signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(),
+									 IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 
 	// InputLayout
@@ -481,11 +481,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// Shaderをコンパイルする
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+																	  L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(vertexShaderBlob != nullptr);
 
 	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
+																	 L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
@@ -595,7 +595,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData->enableLighting = 0;
+	materialData->lightingType = 0;
 
 	/*********************************************************
 	*DirectionalLight用のResourceを作る
@@ -645,7 +645,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 初期設定：色は白、ライティングは無効
 	materialDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialDataSprite->enableLighting = false;
+	materialDataSprite->lightingType = false;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = CreateBufferResource(device.Get(), sizeof(VertexData) * 6);
 	// 頂点BufferViewを作成する
@@ -849,7 +849,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	float aspect = float(kClientWidth) / float(kClientHeight);
 	Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f * 3.14159265f, aspect, 0.1f, 100.0f);
 
-	debugCamera.Initialize(initViewMatrix, initProjectionMatrix,kClientWidth,kClientHeight);
+	debugCamera.Initialize(initViewMatrix, initProjectionMatrix, kClientWidth, kClientHeight);
 
 
 
@@ -861,11 +861,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Init(hwnd);
 	// DX12の初期化
 	ImGui_ImplDX12_Init(device.Get(),
-		swapChainDesc.BufferCount,
-		rtvDesc.Format,
-		srvDescriptorHeap.Get(),
-		srvDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart()
+						swapChainDesc.BufferCount,
+						rtvDesc.Format,
+						srvDescriptorHeap.Get(),
+						srvDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart(),
+						srvDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart()
 	);
 
 	ImGui_ImplDX12_CreateDeviceObjects();
@@ -938,7 +938,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/*********************************************************
 	*音声出力をする
 	*********************************************************/
-	
+
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice *masterVoice;
 
@@ -947,7 +947,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	result = xAudio2->CreateMasteringVoice(&masterVoice);
 
 	SoundData soundData1 = SoundLoadWave("resources/Alarm.wav");
-	SoundPlayWave(xAudio2.Get(), soundData1);
 
 
 
@@ -998,6 +997,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	materialDataSprite->uvTransform = TransformFunctions::MakeIdentity4x4();
 
+	// 使用するか
+	bool isSphere = false;
+	bool isModel = true;
+	bool isSprite = true;
+	bool isSound = false;
+
+	// 音楽を鳴らすための変数
+	bool preIsSound = false;
 
 	// 全キーの入力状態を取得する
 	BYTE keys[256] = {};
@@ -1011,6 +1018,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		} else {
+
+			// 前フレームの取得
+			preIsSound = isSound;
 
 			// ImGuiにこれからフレームが始まる旨を告げる
 			ImGui_ImplDX12_NewFrame();
@@ -1027,62 +1037,83 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::Begin("Window");
 
-			// Sphere
-			if(ImGui::TreeNode("Sphere")) {
-				
-				// 平行移動 (translate)
-				ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
+			/*Sphere
+			*********************************************************/
 
-				// 回転 (rotate) - ラジアン単位、±π の範囲で表示
-				ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
+			// 表示設定
+			ImGui::Checkbox("isSphere", &isSphere);
+			if(isSphere) {
+				if(ImGui::TreeNode("Sphere")) {
 
-				// 拡大縮小 (scale)
-				ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
+					// 平行移動 (translate)
+					ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
 
-				// テクスチャ切り替え
-				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+					// 回転 (rotate) - ラジアン単位、±π の範囲で表示
+					ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
 
-				// ライティングを使うかの切り替え
-				ImGui::Checkbox("useLight", &materialData->enableLighting);
+					// 拡大縮小 (scale)
+					ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
 
-				// 謎
-				ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
+					// テクスチャ切り替え
+					ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-				// 光の位置を変える
-				ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+					// どのライティングを使うかの切り替え
+					const char *lightingItems[] = { "No Lighting", "Lambert", "Half Lambert" };
+					int currentItem = materialData->lightingType;
+					if(ImGui::Combo("Lighting", &currentItem, lightingItems, IM_ARRAYSIZE(lightingItems))) {
+						materialData->lightingType = currentItem;
+					}
+					// ライティングの色切り替え
+					ImGui::ColorEdit3("LightingColor",&directionalLightData.color.x);
 
-				// ライティングのカラー切り替え
-				ImGui::DragFloat4("LightingColor", &directionalLightData.color.x, 0.1f, 0.01f, 0.01f);
+					// 光の強さを変える
+					ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
 
-				ImGui::TreePop();
+					// 光の位置を変える
+					ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+
+					ImGui::TreePop();
+				}
 			}
 
-			// OBJModel
-			if(ImGui::TreeNode("Model")) {
-				
-				// transformModel
-				ImGui::DragFloat3("Translate", &transformModel.translate.x, 0.01f, -10.0f, 10.0f);
-				ImGui::DragFloat3("Scale", &transformModel.scale.x, 0.01f, -10.0f, 10.0f);
-				ImGui::DragFloat3("Rotate", &transformModel.rotate.x,0.01f, -10.0f, 10.0f);
+			/*OBJModel
+			*********************************************************/
 
+			// 表示設定
+			ImGui::Checkbox("isModel", &isModel);
+			if(isModel) {
+				if(ImGui::TreeNode("Model")) {
 
-				//// UVTransform
-				//ImGui::DragFloat3("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-				//ImGui::DragFloat3("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-				//ImGui::DragFloat3("UVRotate", &uvTransformSprite.rotate.x,0.01f, -10.0f, 10.0f);
+					// transformModel
+					ImGui::DragFloat3("Translate", &transformModel.translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat3("Scale", &transformModel.scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat3("Rotate", &transformModel.rotate.x, 0.01f, -10.0f, 10.0f);
 
-				ImGui::TreePop();
+					ImGui::TreePop();
+				}
 			}
 
-			if(ImGui::TreeNode("Sprite")) {
+			/*Sprite
+			*********************************************************/
 
-				// transformModel
-				ImGui::DragFloat3("Translate", &transformSprite.translate.x, 1.0f, 0.0f, 1280.0f);
-				ImGui::DragFloat3("Scale", &transformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-				ImGui::DragFloat3("Rotate", &transformSprite.rotate.x, 0.01f, -10.0f, 10.0f);
+			// 表示設定
+			ImGui::Checkbox("isSprite", &isSprite);
+			if(isSprite) {
+				if(ImGui::TreeNode("Sprite")) {
 
-				ImGui::TreePop();
+					// transformModel
+					ImGui::DragFloat3("Translate", &transformSprite.translate.x, 1.0f, 0.0f, 1280.0f);
+					ImGui::DragFloat3("Scale", &transformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat3("Rotate", &transformSprite.rotate.x, 0.01f, -10.0f, 10.0f);
+
+					ImGui::TreePop();
+				}
 			}
+
+			/*Sound
+			*********************************************************/
+
+			ImGui::Checkbox("isSound", &isSound);
 
 			ImGui::End();
 
@@ -1124,15 +1155,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*更新処理
 			*********************************************************/
 
-			// Y軸を回転させる
-			//transform.rotate.y += 0.03f;
-
 			/*camera用の座標変換
 			*********************************************************/
-
-			//Matrix4x4 viewMatrixSphere = debugCamera.GetViewMatrix();
-			//Matrix4x4 projectionMatrixSphere = debugCamera.GetProjectionMatrix();
-
 
 			Matrix4x4 worldMatrix =
 				TransformFunctions::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
@@ -1173,7 +1197,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 wvpSphere
 				= TransformFunctions::Multiply(
 					worldMatrixSphere,
-					TransformFunctions::Multiply(viewMatrix,projectionMatrix)
+					TransformFunctions::Multiply(viewMatrix, projectionMatrix)
 				);
 
 
@@ -1201,10 +1225,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 wvpModel =
 				TransformFunctions::Multiply(worldMatrixModel,
-					TransformFunctions::Multiply(viewMatrix, projectionMatrix));
+											 TransformFunctions::Multiply(viewMatrix, projectionMatrix));
 
 			transformationMatrixDataModel->WVP = wvpModel;
 			transformationMatrixDataModel->World = worldMatrixModel;
+
+			/* Soundの再生
+			*********************************************************/
+
+			// isSoundがtrueになり、かつ前のフレームではfalseだった場合に再生
+			if(isSound && !preIsSound) {
+				SoundPlayWave(xAudio2.Get(), soundData1);
+			}
 
 			/*********************************************************
 			*描画処理
@@ -1247,7 +1279,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*********************************************************
 			*球の描画
 			*********************************************************/
-			{
+
+			if(isSphere) {
 				// 1. 球用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
 				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 				D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = useMonsterBall ? textureSrvHandleGPU[1] : textureSrvHandleGPU[0];
@@ -1265,7 +1298,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*********************************************************
 			*モデルの描画
 			*********************************************************/
-			{
+
+			if(isModel) {
 				// 1. モデル用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
 				// ※ materialResource は現在、球とモデルで共通のものを使っています。モデル専用のマテリアルを作ることもできます。
 				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -1283,7 +1317,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*********************************************************
 			*スプライトの描画
 			*********************************************************/
-			{
+
+			if(isSprite) {
 				// 1. スプライト用のリソースを設定
 				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // マテリアル
 				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // 座標変換行列

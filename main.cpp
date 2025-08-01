@@ -1106,6 +1106,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::DragFloat3("Scale", &transformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 					ImGui::DragFloat3("Rotate", &transformSprite.rotate.x, 0.01f, -10.0f, 10.0f);
 
+					// UVトランスフォーム用にこのセクションを追加
+					if(ImGui::TreeNode("UV Transform")) {
+						ImGui::DragFloat2("UV Translate", &uvTransformSprite.translate.x, 0.01f);
+						ImGui::DragFloat("UV Rotate", &uvTransformSprite.rotate.z, 0.01f);
+						ImGui::DragFloat2("UV Scale", &uvTransformSprite.scale.x, 0.01f);
+						ImGui::ColorEdit3("UV Color", &materialDataSprite->color.x);
+						ImGui::TreePop();
+					}
+
 					ImGui::TreePop();
 				}
 			}

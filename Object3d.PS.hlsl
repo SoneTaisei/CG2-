@@ -47,11 +47,13 @@ float4 main(VertexShaderOutput input) : SV_TARGET {
     // lightingType の値に応じてライティングを切り替える
     if (gMaterial.lightingType == 2) { // 2: Half Lambert
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        color.a = gMaterial.color.a * textureColor.a;
     } else if (gMaterial.lightingType == 1) { // 1: Lambert
         // saturateは値を0.0f-1.0fの範囲にクランプする関数
         float cos = saturate(NdotL);
-        color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        color.a = gMaterial.color.a * textureColor.a;
     } else { // 0: Lighting なし
         color = gMaterial.color * textureColor;
     }

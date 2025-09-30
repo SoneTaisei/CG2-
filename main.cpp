@@ -1,5 +1,6 @@
 #include"Utilityfunctions.h"
 #include"DebugCamera.h"
+#include"BlendMode.h"
 
 
 const int kWindowWidth = 1280;
@@ -468,9 +469,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
-	// 全ての色素を書き込む
-	blendDesc.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -1064,7 +1072,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						materialData->lightingType = currentItem;
 					}
 					// ライティングの色切り替え
-					ImGui::ColorEdit3("LightingColor",&directionalLightData.color.x);
+					ImGui::ColorEdit4("MaterialColor",&materialData->color.x);
 
 					// 光の強さを変える
 					ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);

@@ -1,7 +1,7 @@
 #pragma once
-#include"Structs.h"
-#include"ResourceObject.h"
-#include"D3DResourceLeakChacker.h"
+#include"Utility/Structs.h"
+#include"GameObject/ResourceObject.h"
+#include"Graphics/D3DResourceLeakChacker.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 

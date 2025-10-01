@@ -18,10 +18,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\Core\main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="TransformFunctions.cpp">
+    <ClCompile Include="src\Utility\TransformFunctions.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -45,34 +45,34 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="UtilityFunctions.cpp">
+    <ClCompile Include="src\Utility\UtilityFunctions.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MyGameApp.cpp">
+    <ClCompile Include="src\Core\MyGameApp.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceObject.cpp">
+    <ClCompile Include="src\GameObject\ResourceObject.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="D3DResourceLeakChacker.cpp">
+    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="DebugCamera.cpp">
+    <ClCompile Include="src\Graphics\DebugCamera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="InputManager.cpp">
+    <ClCompile Include="src\Input\InputManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Object3D.cpp">
+    <ClCompile Include="src\GameObject\Object3D.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Object3d.VS.hlsl" />
-    <FxCompile Include="Object3d.PS.hlsl" />
+    <FxCompile Include="shaders\Object3d.VS.hlsl" />
+    <FxCompile Include="shaders\Object3d.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TransformFunctions.h">
+    <ClInclude Include="src\Utility\TransformFunctions.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -99,31 +99,31 @@
     <ClInclude Include="externals\imgui\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Structs.h">
+    <ClInclude Include="src\Utility\Structs.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="UtilityFunctions.h">
+    <ClInclude Include="src\Utility\UtilityFunctions.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MyGameApp.h">
+    <ClInclude Include="src\Core\MyGameApp.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceObject.h">
+    <ClInclude Include="src\GameObject\ResourceObject.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="D3DResourceLeakChacker.h">
+    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="DebugCamera.h">
+    <ClInclude Include="src\Graphics\DebugCamera.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="InputManager.h">
+    <ClInclude Include="src\Input\InputManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Object3D.h">
+    <ClInclude Include="src\GameObject\Object3D.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="BlendMode.h">
+    <ClInclude Include="src\Utility\BlendMode.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -133,6 +133,6 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Object3d.hlsli" />
+    <None Include="shaders\Object3d.hlsli" />
   </ItemGroup>
 </Project>

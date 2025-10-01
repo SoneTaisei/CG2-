@@ -1,6 +1,6 @@
-#include"Utilityfunctions.h"
-#include"DebugCamera.h"
-#include"BlendMode.h"
+#include"Utility/Utilityfunctions.h"
+#include"Graphics/DebugCamera.h"
+#include"Utility/BlendMode.h"
 
 
 const int kWindowWidth = 1280;
@@ -488,11 +488,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	// Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"shaders/Object3D.VS.hlsl",
 																	  L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"shaders/Object3D.PS.hlsl",
 																	 L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 

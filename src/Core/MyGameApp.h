@@ -1,5 +1,5 @@
 #pragma once
-#include "UtilityFunctions.h"
+#include "Utility/UtilityFunctions.h"
 class MyGameApp {
 public:
 	MyGameApp(UINT width, UINT height);

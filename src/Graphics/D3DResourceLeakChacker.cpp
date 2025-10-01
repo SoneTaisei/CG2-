@@ -1,5 +1,5 @@
 #include "D3DResourceLeakChacker.h"
-#include "Structs.h"
+#include "Utility/Structs.h"
 
 D3DResourceLeakChacker::~D3DResourceLeakChacker() {
 	// リソースチェック

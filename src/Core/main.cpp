@@ -1,11 +1,11 @@
 #include"Utility/Utilityfunctions.h"
 #include"Graphics/DebugCamera.h"
 #include"Utility/BlendMode.h"
+#include "Input/KeyboardInput.h"
 
 
 const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
-
 
 
 // windowsアプリでのエントリーポイント(main関数)
@@ -102,28 +102,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 	HRESULT result;
 
-	IDirectInput8 *directInput = nullptr;
-	result = DirectInput8Create(
-		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void **)&directInput, nullptr
-	);
-	assert(SUCCEEDED(result));
-
-	// キーボードデバイスの生成
-	IDirectInputDevice8 *keyboard = nullptr;
-	result =
-		directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(result));
-
-	// 入力データ形式のセット
-	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
-	assert(SUCCEEDED(result));
-
-	// 排他制御レベルのセット
-	result = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY
-	);
-	assert(SUCCEEDED(result));
+	// 変更後 (ウィンドウ生成(CreateWindow)の後あたりに記述)
+	assert(KeyboardInput::GetInstance()->Initialize(wc.hInstance, hwnd));
 
 	// DXGIファクトリーの生成
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
@@ -478,7 +458,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
-	
+
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -1072,7 +1052,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						materialData->lightingType = currentItem;
 					}
 					// ライティングの色切り替え
-					ImGui::ColorEdit4("MaterialColor",&materialData->color.x);
+					ImGui::ColorEdit4("MaterialColor", &materialData->color.x);
 
 					// 光の強さを変える
 					ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
@@ -1137,8 +1117,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// カメラの呼び出し
 			debugCamera.Update();
 
-			keyboard->Acquire();
-			keyboard->GetDeviceState(sizeof(keys), keys);
+			// 変更後
+			KeyboardInput::GetInstance()->Update();
 
 			// ゲームの処理
 			backBufferIndex = swapChain.Get()->GetCurrentBackBufferIndex();

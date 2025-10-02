@@ -1,7 +1,8 @@
+#include "Input/KeyboardInput.h"
+#include "Input/GamepadInput.h"
 #include"Utility/Utilityfunctions.h"
 #include"Graphics/DebugCamera.h"
 #include"Utility/BlendMode.h"
-#include "Input/KeyboardInput.h"
 
 
 const int kWindowWidth = 1280;
@@ -102,8 +103,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*********************************************************/
 	HRESULT result;
 
-	// 変更後 (ウィンドウ生成(CreateWindow)の後あたりに記述)
+	// キーボードの初期化
 	assert(KeyboardInput::GetInstance()->Initialize(wc.hInstance, hwnd));
+	// コントローラーの初期化
+	GamepadInput::GetInstance()->Initialize(wc.hInstance, hwnd); // こちらは接続されていなくてもエラーにしない
 
 	// DXGIファクトリーの生成
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
@@ -1007,6 +1010,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
+			// --- 更新処理 ---
+			KeyboardInput::GetInstance()->Update();
+			GamepadInput::GetInstance()->Update();
+
+			// --- 入力判定の例 ---
+			auto keyboard = KeyboardInput::GetInstance();
+			auto gamepad = GamepadInput::GetInstance();
+
 			// 前フレームの取得
 			preIsSound = isSound;
 
@@ -1029,38 +1040,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*********************************************************/
 
 			// 表示設定
-			ImGui::Checkbox("isSphere", &isSphere);
-			if(isSphere) {
-				if(ImGui::TreeNode("Sphere")) {
+			if(keyboard->IsKeyPressed(DIK_SPACE) || gamepad->IsButtonPressed(0)) {
+				ImGui::Checkbox("isSphere", &isSphere);
+				if(isSphere) {
+					if(ImGui::TreeNode("Sphere")) {
 
-					// 平行移動 (translate)
-					ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
+						// 平行移動 (translate)
+						ImGui::DragFloat3("Translate", &transformSphere.translate.x, 0.1f);
 
-					// 回転 (rotate) - ラジアン単位、±π の範囲で表示
-					ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
+						// 回転 (rotate) - ラジアン単位、±π の範囲で表示
+						ImGui::DragFloat3("Rotate", &transformSphere.rotate.x, 0.01f, -3.14f, 3.14f);
 
-					// 拡大縮小 (scale)
-					ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
+						// 拡大縮小 (scale)
+						ImGui::DragFloat3("Scale", &transformSphere.scale.x, 0.1f, 0.01f, 10.0f);
 
-					// テクスチャ切り替え
-					ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+						// テクスチャ切り替え
+						ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-					// どのライティングを使うかの切り替え
-					const char *lightingItems[] = { "No Lighting", "Lambert", "Half Lambert" };
-					int currentItem = materialData->lightingType;
-					if(ImGui::Combo("Lighting", &currentItem, lightingItems, IM_ARRAYSIZE(lightingItems))) {
-						materialData->lightingType = currentItem;
+						// どのライティングを使うかの切り替え
+						const char *lightingItems[] = { "No Lighting", "Lambert", "Half Lambert" };
+						int currentItem = materialData->lightingType;
+						if(ImGui::Combo("Lighting", &currentItem, lightingItems, IM_ARRAYSIZE(lightingItems))) {
+							materialData->lightingType = currentItem;
+						}
+						// ライティングの色切り替え
+						ImGui::ColorEdit4("MaterialColor", &materialData->color.x);
+
+						// 光の強さを変える
+						ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
+
+						// 光の位置を変える
+						ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+
+						ImGui::TreePop();
 					}
-					// ライティングの色切り替え
-					ImGui::ColorEdit4("MaterialColor", &materialData->color.x);
-
-					// 光の強さを変える
-					ImGui::DragFloat("LightingIntensity", &directionalLightData.intensity, 0.1f, 0.0f, 10.0f);
-
-					// 光の位置を変える
-					ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
-
-					ImGui::TreePop();
 				}
 			}
 
@@ -1069,15 +1082,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 表示設定
 			ImGui::Checkbox("isModel", &isModel);
-			if(isModel) {
-				if(ImGui::TreeNode("Model")) {
+			if(gamepad->IsButtonPressed(0)) {
+				if(isModel) {
+					if(ImGui::TreeNode("Model")) {
 
-					// transformModel
-					ImGui::DragFloat3("Translate", &transformModel.translate.x, 0.01f, -10.0f, 10.0f);
-					ImGui::DragFloat3("Scale", &transformModel.scale.x, 0.01f, -10.0f, 10.0f);
-					ImGui::DragFloat3("Rotate", &transformModel.rotate.x, 0.01f, -10.0f, 10.0f);
+						// transformModel
+						ImGui::DragFloat3("Translate", &transformModel.translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat3("Scale", &transformModel.scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat3("Rotate", &transformModel.rotate.x, 0.01f, -10.0f, 10.0f);
 
-					ImGui::TreePop();
+						ImGui::TreePop();
+					}
 				}
 			}
 
@@ -1116,9 +1131,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// カメラの呼び出し
 			debugCamera.Update();
-
-			// 変更後
-			KeyboardInput::GetInstance()->Update();
 
 			// ゲームの処理
 			backBufferIndex = swapChain.Get()->GetCurrentBackBufferIndex();

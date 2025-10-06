@@ -48,7 +48,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include"../externals/DirectXTex/d3dx12.h"
 #include"vector"
 
-#include <fstream>
 #include <sstream>
 
 #include <wrl.h>

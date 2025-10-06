@@ -3,6 +3,9 @@
 #include"Utility/Utilityfunctions.h"
 #include"Graphics/DebugCamera.h"
 #include"Utility/BlendMode.h"
+#include "Audio/AudioManager.h"
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
 
 
 const int kWindowWidth = 1280;
@@ -11,6 +14,7 @@ const int kWindowHeight = 720;
 
 // windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); // ← この行を追加
 
 	D3DResourceLeakChacker leakCheck;
 
@@ -101,7 +105,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/*********************************************************
 	*DirectX初期化処理
 	*********************************************************/
-	HRESULT result;
 
 	// キーボードの初期化
 	assert(KeyboardInput::GetInstance()->Initialize(wc.hInstance, hwnd));
@@ -170,7 +173,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// エラーの時にとまる
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 		// 警告時にとまる
-		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 		// 制御するメッセージのID
 		D3D12_MESSAGE_ID denyIds[] = {
 			// Windows11でのDXGIデバッグレイヤーとDX12デバッグレイヤーの相互作用バグによるエラーメッセージ
@@ -573,9 +576,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*Material用のResourceを作る
 	*********************************************************/
 
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	//Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = CreateBufferResource(device, sizeof(Vector4));
-
 	const UINT materialBufferSize =
 		(sizeof(Material) + 255) & ~255u; // 256 バイトに丸め
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource =
@@ -587,6 +587,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData->lightingType = 0;
+	materialResource->Unmap(0, nullptr);
 
 	/*********************************************************
 	*DirectionalLight用のResourceを作る
@@ -609,6 +610,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// directionalLightData の中身をコピーして書き込む
 	*mappedDirectionalLightData = directionalLightData;
+	directionalLightResource->Unmap(0, nullptr);
 
 	/*********************************************************
 	*TransformationMatrix用のResourceを作る
@@ -622,6 +624,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	wvpResource->Map(0, nullptr, reinterpret_cast<void **>(&wvpData));
 	// 谷行列を書き込んでおく
 	*wvpData = TransformFunctions::MakeIdentity4x4();
+	wvpResource->Unmap(0, nullptr);
 
 
 
@@ -681,6 +684,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 
+	vertexResourceSprite->Unmap(0, nullptr);
+
 	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(device.Get(), sizeof(TransformMatrix));
 	// データを書き込む
@@ -730,8 +735,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceSphere = CreateBufferResource(device.Get(), sizeof(uint32_t) * sphereIndices.size());
 
 	//// 頂点データをGPUに書き込む（位置と法線をセット）
-	VertexData *vertexData = nullptr;
+	/*VertexData *vertexData = nullptr;
 	vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void **>(&vertexData));
+
+	vertexResourceSphere->Unmap(0, nullptr);
 
 	for(size_t index = 0; index < sphereVertices.size(); ++index) {
 		vertexData[index] = sphereVertices[index];
@@ -740,7 +747,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[index].position.y,
 			vertexData[index].position.z
 		};
-	}
+	}*/
 
 	uint32_t *mappedIndexData = nullptr;
 	indexResourceSphere->Map(0, nullptr, reinterpret_cast<void **>(&mappedIndexData));
@@ -764,6 +771,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexBufferViewSphere.BufferLocation = indexResourceSphere->GetGPUVirtualAddress();
 	indexBufferViewSphere.SizeInBytes = UINT(sizeof(uint32_t) * sphereIndices.size());
 	indexBufferViewSphere.Format = DXGI_FORMAT_R32_UINT;
+
+	indexResourceSphere->Unmap(0, nullptr);
 
 	UINT indexCount = static_cast<UINT>(sphereIndices.size());
 
@@ -792,6 +801,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[3] = 1;
 	indexDataSprite[4] = 3;
 	indexDataSprite[5] = 2;
+	indexResourceSprite->Unmap(0, nullptr);
 
 	/*********************************************************
 	*ModelDataを使う
@@ -829,6 +839,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	VertexData *vertexDataModel = nullptr;
 	vertexResourceModel->Map(0, nullptr, reinterpret_cast<void **>(&vertexDataModel));// 書き込むためのアドレスを取得
 	std::memcpy(vertexDataModel, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+	vertexResourceModel->Unmap(0, nullptr);
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceModel = CreateBufferResource(device.Get(), sizeof(TransformMatrix));
 	TransformMatrix *transformationMatrixDataModel = nullptr;
@@ -930,12 +941,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*音声出力をする
 	*********************************************************/
 
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice *masterVoice;
-
-	// XAudioエンジンのインスタンスを生成
-	result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	result = xAudio2->CreateMasteringVoice(&masterVoice);
+	//AudioManagerを初期化
+	AudioManager::Initialize();
 
 	SoundData soundData1 = SoundLoadWave("resources/Alarm.wav");
 
@@ -1013,6 +1020,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// --- 更新処理 ---
 			KeyboardInput::GetInstance()->Update();
 			GamepadInput::GetInstance()->Update();
+			AudioManager::Update();
 
 			// --- 入力判定の例 ---
 			auto keyboard = KeyboardInput::GetInstance();
@@ -1244,7 +1252,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// isSoundがtrueになり、かつ前のフレームではfalseだった場合に再生
 			if(isSound && !preIsSound) {
-				SoundPlayWave(xAudio2.Get(), soundData1);
+				AudioManager::Play(soundData1); // ← こちらに変更
 			}
 
 			/*********************************************************
@@ -1376,81 +1384,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
-	xAudio2.Reset();
-
-	SoundUnload(&soundData1);
-
-	// MapしたリソースをすべてUnmapする
-	/*if(vertexResource) {
-		vertexResource->Unmap(0, nullptr);
-	}*/
-	if(wvpResource) {
-		wvpResource->Unmap(0, nullptr);
-	}
-	if(materialResource) {
-		materialResource->Unmap(0, nullptr);
-	}
-	if(vertexResourceSprite) {
-		vertexResourceSprite->Unmap(0, nullptr);
-	}
-	if(transformationMatrixResourceSprite) {
-		transformationMatrixResourceSprite->Unmap(0, nullptr);
-	}
-	if(directionalLightResource) {
-		directionalLightResource->Unmap(0, nullptr);
-	}
-	if(materialResourceSprite) {
-		materialResourceSprite->Unmap(0, nullptr);
-	}
-	if(viewProjectionResource) {
-		viewProjectionResource->Unmap(0, nullptr);
-	}
-	if(transformationMatrixResourceModel) {
-		transformationMatrixResourceModel->Unmap(0, nullptr);
-	}
-	if(transformationMatrixResourceSphere) {
-		transformationMatrixResourceSphere->Unmap(0, nullptr);
-	}
-	if(vertexResourceModel) {
-		vertexResourceModel->Unmap(0, nullptr);
-	}
-	if(vertexResourceSphere) {
-		vertexResourceSphere->Unmap(0, nullptr);
-	}
-	if(indexResourceSphere) {
-		indexResourceSphere->Unmap(0, nullptr);
-	}
-	if(indexResourceSprite) {
-		indexResourceSprite->Unmap(0, nullptr);
+	// GPUの処理がすべて完了するのを待つ
+	fenceValue++;
+	commandQueue->Signal(fence.Get(), fenceValue);
+	if(fence->GetCompletedValue() < fenceValue) {
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
 	}
 
 	/*********************************************************
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/
 
-	// ======== 各種解放 ============
-	// 順序に注意（ImGuiより先に使ってる srv/dsvHeap は後）
-	CloseHandle(fenceEvent);
-
-	// ======== COMの終了処理 ============
-	CoUninitialize();
-
 	// ======== ImGui解放 ============
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	// ======== Liveオブジェクトチェック ============ ←ここに移動
-	/*Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		Log("Reporting Live Objects...\n");
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		HRESULT hr_report = debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		Log(std::format("ReportLiveObjects() returned: 0x{:08X}\n", static_cast<uint32_t>(hr_report)));
-	}*/
+	AudioManager::Finalize();
+	SoundUnload(&soundData1);
+	CloseHandle(fenceEvent);
 
+	// ======== COMの終了処理 ============
+	CoUninitialize();
 
 	return 0;
 }

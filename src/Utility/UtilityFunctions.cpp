@@ -73,6 +73,7 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS *exception) {
 	minidumpInformation.ClientPointers = TRUE;
 	// Dumpを出力。MiniDumNormalは最低限の情報を出力するフラグ
 	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
+	CloseHandle(dumpFileHandle);
 	// ほかに関連付けられているSEH例外ハンドラがあれば実行。通常プロセスを終了する。
 	return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -579,27 +580,6 @@ void SoundUnload(SoundData *soundData) {
 	soundData->pBuffer = 0;
 	soundData->bufferSize = 0;
 	soundData->wfex = {};
-}
-
-void SoundPlayWave(IXAudio2 *xAudio2, const SoundData &soundData) {
-
-	HRESULT result;
-
-	// 波形のフォーマットを元にSourceVoiceの生成
-	IXAudio2SourceVoice *pSourceVoice = nullptr;
-	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-	assert(SUCCEEDED(result));
-
-	// 再生する波形データの設定
-	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
-	buf.Flags = XAUDIO2_END_OF_STREAM;
-
-	// 波形データの再生
-	result = pSourceVoice->SubmitSourceBuffer(&buf);
-	result = pSourceVoice->Start();
-
 }
 
 bool IsKeyHeld(BYTE keys) {

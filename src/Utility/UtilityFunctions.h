@@ -64,8 +64,6 @@ SoundData SoundLoadWave(const char *filename);
 
 void SoundUnload(SoundData *soundData);
 
-void SoundPlayWave(IXAudio2 *xAudio2, const SoundData &soundData);
-
 /*キー入力の取得
 *********************************************************/
 

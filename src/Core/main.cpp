@@ -115,6 +115,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 	// HRESULTはWindows系のエラーコードであり関数が成功したかどうかをSUCCEEDEDマクロで判定できる
 	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+	if(FAILED(hr)) {
+		OutputDebugStringA(std::format("CreateDXGIFactory failed: HRESULT=0x{:08X}\n", hr).c_str());
+	}
 	//エラーが出たらassert
 	assert(SUCCEEDED(hr));
 

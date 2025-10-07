@@ -6,6 +6,7 @@
 #include "Audio/AudioManager.h"
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#include"Sprite/Sprite.h"
 
 
 const int kWindowWidth = 1280;
@@ -386,10 +387,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;// PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;// レジスタ番号0とバインド
 	rootParameters[0].Descriptor.RegisterSpace = 0;
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;// CBVを使う
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;// VertexShaderで使う
-	rootParameters[1].Descriptor.ShaderRegister = 0;// レジスタ番号0を使う
-	rootParameters[1].Descriptor.RegisterSpace = 0;
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS; // CBVから変更
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	// TransformMatrix(Matrix4x4 * 2) 分のサイズを32bit(4byte)単位で指定
+	rootParameters[1].Constants.Num32BitValues = sizeof(TransformMatrix) / 4;
+	rootParameters[1].Constants.ShaderRegister = 0; // 頂点シェーダーの register(b0) に対応
+	rootParameters[1].Constants.RegisterSpace = 0;
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;// DescriptorTableを使う
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;// ZPixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;// Tableの中身の配列を指定
@@ -522,6 +525,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 
 
+	assert(SUCCEEDED(hr));
+
+	// --------------------------------------------------------------------
+	// スプライト用のパイプラインステートを作成（深度テストを無効にする）
+	// --------------------------------------------------------------------
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> spritePipelineState = nullptr;
+
+	// 既存の設定をコピーし、深度に関する設定だけ変更する
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC spritePipelineStateDesc = graphicsPipelineStateDesc;
+	spritePipelineStateDesc.DepthStencilState.DepthEnable = false; // 深度テストを無効化
+
+	// スプライト用のPSOを生成
+	hr = device->CreateGraphicsPipelineState(&spritePipelineStateDesc, IID_PPV_ARGS(&spritePipelineState));
 	assert(SUCCEEDED(hr));
 
 	/*********************************************************
@@ -954,6 +970,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*変数宣言
 	*********************************************************/
 
+	for(int i = 0; i < textureCount; ++i) {
+	// SRVの生成
+		device->CreateShaderResourceView(textureResource[i].Get(), &srvDesc[i], textureSrvHandleCPU[i]);
+	}
+
+	// テクスチャハンドル配列を作成
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
+	textureHandles.push_back(textureSrvHandleGPU[0]); // uvChecker.png
+	textureHandles.push_back(textureSrvHandleGPU[1]); // monsterBall.png
+	textureHandles.push_back(textureSrvHandleGPU[2]); // plane.objのテクスチャ
+
+	// Spriteクラスの静的リソースを初期化
+	Sprite::StaticInitialize(device.Get(), kClientWidth, kClientHeight, textureHandles);
+
 	// Transform変数を作る
 	Transform transform = {
 		{1.0f,1.0f,1.0f},
@@ -1139,6 +1169,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::End();
 
+			// --- ImGuiの更新 ---
+			ImGui::Begin("Sprite Control");
+			static float pos[2] = { 200.0f, 200.0f };
+			static float size[2] = { 100.0f, 100.0f };
+			static float scale[2] = { 1.0f, 1.0f };
+			static float angle = 0.0f;
+			static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			ImGui::DragFloat2("Position", pos);
+			ImGui::DragFloat2("Size", size);
+			ImGui::DragFloat2("Scale", scale, 0.01f);
+			ImGui::SliderAngle("Angle", &angle);
+			ImGui::ColorEdit4("Color", color);
+			ImGui::End();
+
 			// カメラの呼び出し
 			debugCamera.Update();
 
@@ -1284,7 +1328,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
 			commandList->IASetIndexBuffer(&indexBufferViewSphere);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSphere->GetGPUVirtualAddress());
 
 			viewProjectionData->viewProjectionMatrix = TransformFunctions::Multiply(viewMatrix, projectionMatrix);
 			viewProjectionData->cameraPosition = cameraTransform.translate;
@@ -1295,61 +1338,92 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ライトの変更内容をGPUに書き戻す
 			*mappedDirectionalLightData = directionalLightData;
 
-			/*********************************************************
-			*球の描画
-			*********************************************************/
-
-			if(isSphere) {
-				// 1. 球用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
-				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-				D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = useMonsterBall ? textureSrvHandleGPU[1] : textureSrvHandleGPU[0];
-				commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSphere->GetGPUVirtualAddress());
-
-				// 2. 球の頂点・インデックスバッファを設定
-				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
-				commandList->IASetIndexBuffer(&indexBufferViewSphere);
-
-				// 3. 球を描画
-				commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
-			}
-
-			/*********************************************************
-			*モデルの描画
-			*********************************************************/
-
-			if(isModel) {
-				// 1. モデル用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
-				// ※ materialResource は現在、球とモデルで共通のものを使っています。モデル専用のマテリアルを作ることもできます。
-				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]); // modelDataから読み込んだテクスチャ
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
-
-				// 2. モデルの頂点・インデックスバッファを設定
-				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
-				commandList->IASetIndexBuffer(&indexBufferViewModel);
-
-				// 3. モデルを描画
-				commandList->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
-			}
-
-			/*********************************************************
-			*スプライトの描画
-			*********************************************************/
 
 			if(isSprite) {
-				// 1. スプライト用のリソースを設定
-				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // マテリアル
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // 座標変換行列
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[0]); // テクスチャ（ここではuvChecker.pngを使用）
+				// スプライトを描画する前に、スプライト専用のPSOに切り替える
+				commandList->SetPipelineState(spritePipelineState.Get());
 
-				// 2. スプライトの頂点・インデックスバッファを設定
-				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-				commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				// スプライト描画の開始を宣言
+				Sprite::PreDraw(commandList.Get());
 
-				// 3. スプライトを描画（インデックス6個）
-				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				// Sprite::Draw() で描画
+				Sprite::Draw(
+					pos[0], pos[1],                           // 位置
+					size[0], size[1],                         // サイズ
+					0,                                        // テクスチャハンドル (0: uvChecker)
+					scale[0], scale[1],                       // 拡縮
+					angle,                                    // 回転
+					{ color[0], color[1], color[2], color[3] } // 色
+				);
+
+				Sprite::Draw(
+					640.0f, 360.0f,                   // 位置 (X=640, Y=360)
+					128.0f, 128.0f,                   // サイズ (128x128ピクセル)
+					1,                                // テクスチャハンドル (1: モンスターボール)
+					1.0f, 1.0f,                       // 拡縮 (等倍)
+					0.0f,                             // 回転 (なし)
+					{ 1.0f, 1.0f, 1.0f, 1.0f }          // 色 (不透明な白)
+				);
+
+				// 別のスプライトも簡単に追加できる
+				Sprite::Draw(150, 50, 100, 100, 1); // 座標(50,50)にサイズ100x100でモンスターボールを描画
 			}
+
+			///*********************************************************
+			//*球の描画
+			//*********************************************************/
+
+			//if(isSphere) {
+			//	// 1. 球用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
+			//	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			//	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = useMonsterBall ? textureSrvHandleGPU[1] : textureSrvHandleGPU[0];
+			//	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+			//	commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSphere->GetGPUVirtualAddress());
+
+			//	// 2. 球の頂点・インデックスバッファを設定
+			//	commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+			//	commandList->IASetIndexBuffer(&indexBufferViewSphere);
+
+			//	// 3. 球を描画
+			//	commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			//}
+
+			///*********************************************************
+			//*モデルの描画
+			//*********************************************************/
+
+			//if(isModel) {
+			//	// 1. モデル用のリソース（マテリアル、テクスチャ、座標変換行列）を設定
+			//	// ※ materialResource は現在、球とモデルで共通のものを使っています。モデル専用のマテリアルを作ることもできます。
+			//	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			//	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[2]); // modelDataから読み込んだテクスチャ
+			//	commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceModel->GetGPUVirtualAddress());
+
+			//	// 2. モデルの頂点・インデックスバッファを設定
+			//	commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+			//	commandList->IASetIndexBuffer(&indexBufferViewModel);
+
+			//	// 3. モデルを描画
+			//	commandList->DrawIndexedInstanced(UINT(modelData.indices.size()), 1, 0, 0, 0);
+			//}
+
+			///*********************************************************
+			//*スプライトの描画
+			//*********************************************************/
+
+			//if(isSprite) {
+			//	// 1. スプライト用のリソースを設定
+			//	commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress()); // マテリアル
+			//	commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress()); // 座標変換行列
+			//	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU[0]); // テクスチャ（ここではuvChecker.pngを使用）
+
+			//	// 2. スプライトの頂点・インデックスバッファを設定
+			//	commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			//	commandList->IASetIndexBuffer(&indexBufferViewSprite);
+
+			//	// 3. スプライトを描画（インデックス6個）
+			//	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			//}
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();
@@ -1400,86 +1474,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/
 
-	// 全てのComPtrオブジェクトを明示的に解放する
-	// 解放は基本的に作成と逆の順序で行う
-
-	//// 1. 各種リソース
-	//depthStencilResource.Reset();
-	//for(int i = 0; i < textureCount; ++i) {
-	//	textureResource[i].Reset();
-	//	intermediateResource[i].Reset();
-	//}
-	//indexResourceModel.Reset();
-	//vertexResourceModel.Reset();
-	//transformationMatrixResourceModel.Reset();
-	//indexResourceSprite.Reset();
-	//vertexResourceSprite.Reset();
-	//materialResourceSprite.Reset();
-	//transformationMatrixResourceSprite.Reset();
-	//indexResourceSphere.Reset();
-	//vertexResourceSphere.Reset();
-	//transformationMatrixResourceSphere.Reset();
-	//viewProjectionResource.Reset();
-	//wvpResource.Reset();
-	//directionalLightResource.Reset();
-	//materialResource.Reset();
-	//vertexResource.Reset();
-
-	//// 2. PSOやRootSignatureなど
-	//graphicsPipelineState.Reset();
-	//pixelShaderBlob.Reset();
-	//vertexShaderBlob.Reset();
-	//rootSignature.Reset();
-	//signatureBlob.Reset();
-	//errorBlob.Reset();
-
-	//// 3. ディスクリプタヒープ
-	//dsvDescriptorHeap.Reset();
-	//imguiSrvDescriptorHeap.Reset();
-	//srvDescriptorHeap.Reset();
-	//rtvDescriptorHeap.Reset();
-
-	//// 4. スワップチェイン関連
-	//for(int i = 0; i < 2; ++i) {
-	//	swapChainResources[i].Reset();
-	//}
-	//swapChain.Reset();
-
-	//// 5. コマンド関連
-	//commandList.Reset();
-	//commandAllocator.Reset();
-	//commandQueue.Reset();
-
-	//// 6. Fence
-	//fence.Reset();
-
-	//// 7. デバイスとファクトリ
-	//infoQueue.Reset();
-	//device.Reset();
-	//useAdapter.Reset();
-	//dxgiFactory.Reset();
-
-	//// 8. DXC
-	//includeHandler.Reset();
-	//dxcCompiler.Reset();
-	//dxcUtils.Reset();
-
-	//// 9. デバッグコントローラー
-	//debugController.Reset();
-
-//#ifdef _DEBUG
-//	Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-//	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-//		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
-//	}
-//#endif
-
 	// ======== ImGui解放 ============
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
 	AudioManager::Finalize();
+	Sprite::StaticFinalize();
 	SoundUnload(&soundData1);
 	CloseHandle(fenceEvent);
 

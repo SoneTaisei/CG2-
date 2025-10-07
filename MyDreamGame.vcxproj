@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\GameObject\ResourceObject.cpp" />
     <ClCompile Include="src\Utility\TransformFunctions.cpp" />
     <ClCompile Include="src\Utility\UtilityFunctions.cpp" />
+    <ClCompile Include="src\Graphics\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Object3d.PS.hlsl">
@@ -202,6 +203,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\Utility\Structs.h" />
     <ClInclude Include="src\Utility\TransformFunctions.h" />
     <ClInclude Include="src\Utility\UtilityFunctions.h" />
+    <ClInclude Include="src\Graphics\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

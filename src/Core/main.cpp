@@ -6,6 +6,7 @@
 #include "Audio/AudioManager.h"
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#include "Graphics/TextureManager.h"
 #include"Sprite/Sprite.h"
 #include "Model/Model.h"
 
@@ -249,14 +250,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// RTV用のヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap =
 		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	// SRV用のヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap =
-		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
-	// ImGui専用のSRVヒープ（ImGuiが内部で使うフォント用）
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> imguiSrvDescriptorHeap =
-		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, true);
-
+	// SRV用のヒープ作成を削除し、TextureManagerの初期化に置き換える
+	TextureManager::GetInstance()->Initialize(device);
 
 	// SwapChainからResourceを引っ張ってくる
 	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2];
@@ -623,35 +618,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::StyleColorsDark();
 	// win32の初期化
 	ImGui_ImplWin32_Init(hwnd);
-	// DX12の初期化
+	// DX12の初期化 (srvDescriptorHeap.Get() の部分を変更)
 	ImGui_ImplDX12_Init(device.Get(),
 						swapChainDesc.BufferCount,
 						rtvDesc.Format,
-						srvDescriptorHeap.Get(),
-						srvDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart(),
-						srvDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart()
+						TextureManager::GetInstance()->GetSrvDescriptorHeap(), // <<< 変更
+						TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+						TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 
 	ImGui_ImplDX12_CreateDeviceObjects();
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = {
-		srvDescriptorHeap.Get()
-	};
-
 	Model *sphereModel = Model::CreateSphere();
 	Model *planeModel = Model::CreateFromObj("resources/plane", "plane.obj");
 
-	// Textureを読んで転送する
-	const int textureCount = 3;
+	// TextureManagerを使ってテクスチャを読み込む
+	// この関数はテクスチャのハンドル(uint32_t型のインデックス)を返す
+	uint32_t uvCheckerHandle = TextureManager::GetInstance()->Load("resources/uvChecker.png", commandList.Get());
+	uint32_t monsterBallHandle = TextureManager::GetInstance()->Load("resources/monsterBall.png", commandList.Get());
 	ModelData planeDataForTexture = planeModel->GetModelData();
-	DirectX::ScratchImage mipImages[textureCount] = { LoadTexture("resources/uvChecker.png"),LoadTexture("resources/monsterBall.png"),LoadTexture(planeDataForTexture.material.textureFilePath) };
-	const DirectX::TexMetadata metadata[textureCount] = { mipImages[0].GetMetadata(),mipImages[1].GetMetadata(),mipImages[2].GetMetadata() };
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource[textureCount] = { CreateTextureResource(device.Get(), metadata[0]),CreateTextureResource(device.Get(), metadata[1]),CreateTextureResource(device.Get(), metadata[2]) };
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource[textureCount] = {
-		UploadTextureData(textureResource[0].Get(), mipImages[0], device.Get(), commandList.Get()),
-		UploadTextureData(textureResource[1].Get(), mipImages[1], device.Get(), commandList.Get()),
-		UploadTextureData(textureResource[2].Get(), mipImages[2], device.Get(), commandList.Get())
-	};
+	uint32_t planeTextureHandle = TextureManager::GetInstance()->Load(planeDataForTexture.material.textureFilePath, commandList.Get());
 
 	// コマンドを閉じる
 	hr = commandList->Close();
@@ -672,22 +658,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	commandAllocator->Reset();
 	commandList->Reset(commandAllocator.Get(), nullptr);
 
-	// metaDataを基にSRVの設定
-	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc[textureCount]{};
-	for(int i = 0; i < textureCount; ++i) {
-		srvDesc[i].Format = metadata[i].format;
-		srvDesc[i].Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc[i].ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc[i].Texture2D.MipLevels = UINT(metadata[i].mipLevels);
-	}
-	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[textureCount] = { GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1),GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2),GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3) };
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[textureCount] = { GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1),GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2),GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3) };
-	for(int i = 0; i < textureCount; ++i) {
-		// SRVの生成
-		device->CreateShaderResourceView(textureResource[i].Get(), &srvDesc[i], textureSrvHandleCPU[i]);
-	}
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
 
 	// DSV用のヒープででスクリプタの数は1
@@ -720,9 +690,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// テクスチャハンドル配列を作成
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
-	textureHandles.push_back(textureSrvHandleGPU[0]); // uvChecker.png
-	textureHandles.push_back(textureSrvHandleGPU[1]); // monsterBall.png
-	textureHandles.push_back(textureSrvHandleGPU[2]); // plane.objのテクスチャ
+	// TextureManagerにロードされている全テクスチャのGPUハンドルを取得してvectorに追加する
+	for(size_t i = 0; i < TextureManager::GetInstance()->GetTextureCount(); ++i) {
+		textureHandles.push_back(TextureManager::GetInstance()->GetGpuHandle(static_cast<uint32_t>(i)));
+	}
 
 	// Spriteクラスの静的リソースを初期化
 	Sprite::StaticInitialize(device.Get(), kClientWidth, kClientHeight, textureHandles);
@@ -934,7 +905,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*********************************************************/
 
 			// 描画コマンド
-			commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+			// TextureManagerからSRVディスクリプタヒープを取得して配列に格納
+			ID3D12DescriptorHeap *heaps[] = { TextureManager::GetInstance()->GetSrvDescriptorHeap() };
+			// ↑で作成した配列をコマンドリストに設定する
+			commandList->SetDescriptorHeaps(1, heaps);
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 
@@ -960,13 +934,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// --- 球の描画 ---
 			if(isSphere) {
-				D3D12_GPU_DESCRIPTOR_HANDLE sphereTextureHandle = useMonsterBall ? textureSrvHandleGPU[1] : textureSrvHandleGPU[0];
+				D3D12_GPU_DESCRIPTOR_HANDLE sphereTextureHandle = useMonsterBall ? TextureManager::GetInstance()->GetGpuHandle(monsterBallHandle) : TextureManager::GetInstance()->GetGpuHandle(uvCheckerHandle);
 				sphereModel->Draw(transformSphere, viewProjectionData->viewProjectionMatrix, sphereTextureHandle);
 			}
 
 			// --- モデルの描画 ---
 			if(isModel) {
-				planeModel->Draw(transformModel, viewProjectionData->viewProjectionMatrix, textureSrvHandleGPU[2]);
+				// まず、TextureManagerを使って整理番号(uvCheckerHandle)からGPUハンドルを取得する
+				D3D12_GPU_DESCRIPTOR_HANDLE planeGpuHandle = TextureManager::GetInstance()->GetGpuHandle(planeTextureHandle);
+				// 取得したGPUハンドルをDraw関数に渡す
+				planeModel->Draw(transformModel, viewProjectionData->viewProjectionMatrix, planeGpuHandle);
 			}
 
 			if(isSprite) {
@@ -980,7 +957,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Sprite::Draw(
 					pos[0], pos[1],                           // 位置
 					size[0], size[1],                         // サイズ
-					0,                                        // テクスチャハンドル (0: uvChecker)
+					uvCheckerHandle,                                        // テクスチャハンドル (0: uvChecker)
 					scale[0], scale[1],                       // 拡縮
 					angle,                                    // 回転
 					{ color[0], color[1], color[2], color[3] } // 色
@@ -989,7 +966,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Sprite::Draw(
 					640.0f, 360.0f,                   // 位置 (X=640, Y=360)
 					128.0f, 128.0f,                   // サイズ (128x128ピクセル)
-					1,                                // テクスチャハンドル (1: モンスターボール)
+					monsterBallHandle,                                // テクスチャハンドル (1: モンスターボール)
 					1.0f, 1.0f,                       // 拡縮 (等倍)
 					0.0f,                             // 回転 (なし)
 					{ 1.0f, 1.0f, 1.0f, 1.0f }          // 色 (不透明な白)
@@ -1059,6 +1036,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	AudioManager::Finalize();
 	Sprite::StaticFinalize();
+	TextureManager::GetInstance()->Finalize();
 	SoundUnload(&soundData1);
 	CloseHandle(fenceEvent);
 

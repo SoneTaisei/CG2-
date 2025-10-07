@@ -644,75 +644,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*wvpData = TransformFunctions::MakeIdentity4x4();
 	wvpResource->Unmap(0, nullptr);
 
-
-
-	/*********************************************************
-	*sprite用のResourceを作る
-	*********************************************************/
-
-	// Sprite用のマテリアル用リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = CreateBufferResource(device.Get(), sizeof(Material));
-	Material *materialDataSprite = nullptr;
-	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void **>(&materialDataSprite));
-
-	// 初期設定：色は白、ライティングは無効
-	materialDataSprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialDataSprite->lightingType = false;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = CreateBufferResource(device.Get(), sizeof(VertexData) * 6);
-	// 頂点BufferViewを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite = {};
-	// リソースの先頭アドレスから使う
-	vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点6つ分のサイズ
-	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
-	// 1頂点当たりのサイズ
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
-
-	// 頂点リソースにデータを書き込む
-	VertexData *vertexDataSprite = nullptr;
-	// 書き込むためのアドレスを取得
-	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void **>(&vertexDataSprite));
-
-	vertexDataSprite[0].normal = { 0.0f,0.0f,-1.0f };
-
-	/*1つ目の三角形
-	*********************************************************/
-
-	// 左下
-	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };
-	vertexDataSprite[0].texcoord = { 0.0f,1.0f };
-	// 左上
-	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
-	// 右下
-	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };
-	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
-
-	/*2つ目の三角形
-	*********************************************************/
-
-	// 左下
-	vertexDataSprite[3].position = { 640.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[3].texcoord = { 1.0f,0.0f };
-	// 上
-	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	// 右下
-	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
-
-	vertexResourceSprite->Unmap(0, nullptr);
-
-	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(device.Get(), sizeof(TransformMatrix));
-	// データを書き込む
-	Matrix4x4 *transformationMatrixDataSprite = nullptr;
-	// 書き込むためのアドレスを取得
-	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void **>(&transformationMatrixDataSprite));
-	// 単位行列を書き込んでおく
-	*transformationMatrixDataSprite = TransformFunctions::MakeIdentity4x4();
-
 	UINT viewProjectionSize = (sizeof(ViewProjection) + 255) & ~255;
 	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource = CreateBufferResource(device.Get(), viewProjectionSize);
 	ViewProjection *viewProjectionData = nullptr;
@@ -997,19 +928,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,-5.0f}
 	};
 
-	Transform transformSprite = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
-
 	Transform transformSphere = {
-		{1.0f, 1.0f, 1.0f},
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 0.0f}
-	};
-
-	Transform uvTransformSprite{
 		{1.0f, 1.0f, 1.0f},
 		{0.0f, 0.0f, 0.0f},
 		{0.0f, 0.0f, 0.0f}
@@ -1024,8 +943,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool useMonsterBall = true;
 
 	materialData->uvTransform = TransformFunctions::MakeIdentity4x4();
-
-	materialDataSprite->uvTransform = TransformFunctions::MakeIdentity4x4();
 
 	// 使用するか
 	bool isSphere = false;
@@ -1136,32 +1053,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
-			/*Sprite
-			*********************************************************/
-
-			// 表示設定
-			ImGui::Checkbox("isSprite", &isSprite);
-			if(isSprite) {
-				if(ImGui::TreeNode("Sprite")) {
-
-					// transformModel
-					ImGui::DragFloat3("Translate", &transformSprite.translate.x, 1.0f, 0.0f, 1280.0f);
-					ImGui::DragFloat3("Scale", &transformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-					ImGui::DragFloat3("Rotate", &transformSprite.rotate.x, 0.01f, -10.0f, 10.0f);
-
-					// UVトランスフォーム用にこのセクションを追加
-					if(ImGui::TreeNode("UV Transform")) {
-						ImGui::DragFloat2("UV Translate", &uvTransformSprite.translate.x, 0.01f);
-						ImGui::DragFloat("UV Rotate", &uvTransformSprite.rotate.z, 0.01f);
-						ImGui::DragFloat2("UV Scale", &uvTransformSprite.scale.x, 0.01f);
-						ImGui::ColorEdit3("UV Color", &materialDataSprite->color.x);
-						ImGui::TreePop();
-					}
-
-					ImGui::TreePop();
-				}
-			}
-
 			/*Sound
 			*********************************************************/
 
@@ -1233,19 +1124,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				TransformFunctions::Multiply(worldMatrix, TransformFunctions::Multiply(viewMatrix, projectionMatrix));
 			//*transformationMatrixData = worldViewProjectionMatrix;
 
-			/*Sprite用の座標変換
-			*********************************************************/
-
-			Matrix4x4 worldMatrixSprite =
-				TransformFunctions::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite =
-				TransformFunctions::MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite =
-				TransformFunctions::MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite =
-				TransformFunctions::Multiply(worldMatrixSprite, TransformFunctions::Multiply(viewMatrixSprite, projectionMatrixSprite));
-			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
-
 			/*Sphere用の座標変換
 			*********************************************************/
 
@@ -1267,14 +1145,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 4. 定数バッファに書き込む
 			transformationMatrixDataSphere->WVP = wvpSphere;
 			transformationMatrixDataSphere->World = worldMatrixSphere;
-
-			/*UVTransformの座標変換
-			*********************************************************/
-
-			Matrix4x4 uvTransformMatrix = TransformFunctions::MakeScaleMatrix(uvTransformSprite.scale);
-			uvTransformMatrix = TransformFunctions::Multiply(uvTransformMatrix, TransformFunctions::MakeRoteZMatrix(uvTransformSprite.rotate.z));
-			uvTransformMatrix = TransformFunctions::Multiply(uvTransformMatrix, TransformFunctions::MakeTranslateMatrix(uvTransformSprite.translate));
-			materialDataSprite->uvTransform = uvTransformMatrix;
 
 			/* モデル用の座標変換
 			*********************************************************/

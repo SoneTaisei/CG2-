@@ -86,7 +86,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr);            //オプション
 
 #ifdef _DEBUG
-	ID3D12Debug1 *debugController = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
 	if(SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		// デバッグレイヤーを有効にする
 		debugController->EnableDebugLayer();
@@ -94,7 +94,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debugController->SetEnableGPUBasedValidation(TRUE);
 
 	}
-	debugController->Release();
 
 
 #endif
@@ -337,8 +336,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(fenceEvent != nullptr);
 
 	// GPUにコマンドリストの実行を行わせる
-	ID3D12CommandList *commandLists[] = { commandList.Get() };
-	commandQueue.Get()->ExecuteCommandLists(1, commandLists);
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
+	commandQueue.Get()->ExecuteCommandLists(1, commandLists->GetAddressOf());
 	// GPUとOSに画面の交換を行うように通知する
 	swapChain.Get()->Present(1, 0);
 	// Fenceの値を更新
@@ -875,7 +874,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ImGui_ImplDX12_CreateDeviceObjects();
 
-	ID3D12DescriptorHeap *descriptorHeaps[] = {
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = {
 		srvDescriptorHeap.Get()
 	};
 
@@ -895,7 +894,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// 実行
-	commandQueue.Get()->ExecuteCommandLists(1, commandLists);
+	commandQueue.Get()->ExecuteCommandLists(1, commandLists->GetAddressOf());
 
 	// Fenceを使ってGPUの完了を待つ
 	fenceValue++;
@@ -1263,7 +1262,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*********************************************************/
 
 			// 描画コマンド
-			commandList->SetDescriptorHeaps(1, descriptorHeaps);
+			commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
@@ -1355,6 +1354,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();
 
+
+
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
@@ -1368,7 +1369,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 
 			// 2. コマンドリストを実行
-			commandQueue.Get()->ExecuteCommandLists(1, commandLists);
+			commandQueue.Get()->ExecuteCommandLists(1, commandLists->GetAddressOf());
 
 			// 3. 画面を表示
 			swapChain.Get()->Present(1, 0);
@@ -1399,6 +1400,80 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*DirectX12のオブジェクト解放処理
 	*********************************************************/
 
+	// 全てのComPtrオブジェクトを明示的に解放する
+	// 解放は基本的に作成と逆の順序で行う
+
+	//// 1. 各種リソース
+	//depthStencilResource.Reset();
+	//for(int i = 0; i < textureCount; ++i) {
+	//	textureResource[i].Reset();
+	//	intermediateResource[i].Reset();
+	//}
+	//indexResourceModel.Reset();
+	//vertexResourceModel.Reset();
+	//transformationMatrixResourceModel.Reset();
+	//indexResourceSprite.Reset();
+	//vertexResourceSprite.Reset();
+	//materialResourceSprite.Reset();
+	//transformationMatrixResourceSprite.Reset();
+	//indexResourceSphere.Reset();
+	//vertexResourceSphere.Reset();
+	//transformationMatrixResourceSphere.Reset();
+	//viewProjectionResource.Reset();
+	//wvpResource.Reset();
+	//directionalLightResource.Reset();
+	//materialResource.Reset();
+	//vertexResource.Reset();
+
+	//// 2. PSOやRootSignatureなど
+	//graphicsPipelineState.Reset();
+	//pixelShaderBlob.Reset();
+	//vertexShaderBlob.Reset();
+	//rootSignature.Reset();
+	//signatureBlob.Reset();
+	//errorBlob.Reset();
+
+	//// 3. ディスクリプタヒープ
+	//dsvDescriptorHeap.Reset();
+	//imguiSrvDescriptorHeap.Reset();
+	//srvDescriptorHeap.Reset();
+	//rtvDescriptorHeap.Reset();
+
+	//// 4. スワップチェイン関連
+	//for(int i = 0; i < 2; ++i) {
+	//	swapChainResources[i].Reset();
+	//}
+	//swapChain.Reset();
+
+	//// 5. コマンド関連
+	//commandList.Reset();
+	//commandAllocator.Reset();
+	//commandQueue.Reset();
+
+	//// 6. Fence
+	//fence.Reset();
+
+	//// 7. デバイスとファクトリ
+	//infoQueue.Reset();
+	//device.Reset();
+	//useAdapter.Reset();
+	//dxgiFactory.Reset();
+
+	//// 8. DXC
+	//includeHandler.Reset();
+	//dxcCompiler.Reset();
+	//dxcUtils.Reset();
+
+	//// 9. デバッグコントローラー
+	//debugController.Reset();
+
+//#ifdef _DEBUG
+//	Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
+//	if(SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+//		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+//	}
+//#endif
+
 	// ======== ImGui解放 ============
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -1408,8 +1483,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SoundUnload(&soundData1);
 	CloseHandle(fenceEvent);
 
+
 	// ======== COMの終了処理 ============
 	CoUninitialize();
-
 	return 0;
 }

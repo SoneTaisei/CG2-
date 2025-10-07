@@ -52,16 +52,16 @@ void Object3D::Draw(ID3D12GraphicsCommandList *commandList, ID3D12DescriptorHeap
 }
 
 void Object3D::DisplayImGui(const std::string &label) {
-    if(ImGui::TreeNode(label.c_str())) {
-        // transform_, material_, light_ の各メンバ変数を操作するUIを作成
-        ImGui::DragFloat3("Translate", &transform_.translate.x, 0.1f);
-        // ... (以下、必要なUIを追加)
+    //if(ImGui::TreeNode(label.c_str())) {
+    //    // transform_, material_, light_ の各メンバ変数を操作するUIを作成
+    //    ImGui::DragFloat3("Translate", &transform_.translate.x, 0.1f);
+    //    // ... (以下、必要なUIを追加)
 
-        const char *items[] = { "No Lighting", "Lambert", "Half Lambert" };
-        ImGui::Combo("Lighting", &material_.lightingType, items, IM_ARRAYSIZE(items));
-        ImGui::ColorEdit3("Light Color", &light_.color.x);
-        ImGui::DragFloat("Light Intensity", &light_.intensity, 0.01f);
+    //    const char *items[] = { "No Lighting", "Lambert", "Half Lambert" };
+    //    ImGui::Combo("Lighting", &material_.lightingType, items, IM_ARRAYSIZE(items));
+    //    ImGui::ColorEdit3("Light Color", &light_.color.x);
+    //    ImGui::DragFloat("Light Intensity", &light_.intensity, 0.01f);
 
-        ImGui::TreePop();
-    }
+    //    ImGui::TreePop();
+    //}
 }

@@ -679,8 +679,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	const std::string alarmSoundHandle = AudioManager::LoadSound("resources/Alarm.wav");
 
-
-
 	/*********************************************************
 	*変数宣言
 	*********************************************************/
@@ -700,12 +698,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
-	};
-
-	Transform cameraTransform = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,-5.0f}
 	};
 
 	Transform transformSphere = {
@@ -923,7 +915,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 projectionMatrix = debugCamera.GetProjectionMatrix();
 			// 共通カメラCBufferの場所を設定
 			viewProjectionData->viewProjectionMatrix = TransformFunctions::Multiply(viewMatrix, projectionMatrix);
-			viewProjectionData->cameraPosition = cameraTransform.translate;
+			viewProjectionData->cameraPosition = debugCamera.GetTranslation();
 			commandList->SetGraphicsRootConstantBufferView(3, viewProjectionResource->GetGPUVirtualAddress());
 			// 共通ライトCBufferの場所を設定
 			*mappedDirectionalLightData = directionalLightData;

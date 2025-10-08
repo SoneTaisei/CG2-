@@ -16,6 +16,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{dcc10227-0303-494f-8736-ad0b8a0b3508}</UniqueIdentifier>
     </Filter>
+    <Filter Include="シェーダーファイル">
+      <UniqueIdentifier>{f3d5894e-636b-4780-8dcc-ce098f210b7a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\main.cpp">
@@ -86,8 +89,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\Object3d.VS.hlsl" />
-    <FxCompile Include="shaders\Object3d.PS.hlsl" />
+    <FxCompile Include="shaders\Object3d.VS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Object3d.PS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utility\TransformFunctions.h">
@@ -169,6 +176,8 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\Object3d.hlsli" />
+    <None Include="shaders\Object3d.hlsli">
+      <Filter>シェーダーファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>

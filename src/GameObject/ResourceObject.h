@@ -1,5 +1,5 @@
 #pragma once
-#include"Structs.h"
+#include"Utility/Structs.h"
 class ResourceObject {
 public:
 	ResourceObject(Microsoft::WRL::ComPtr<ID3D12Resource> resource);

@@ -1,5 +1,5 @@
 #pragma once
-#include"Structs.h"
+#include"Utility/Structs.h"
 class DebugCamera {
 private:
 	// x,y,z軸周りのローカル回転角度

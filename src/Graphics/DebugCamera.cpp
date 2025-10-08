@@ -1,5 +1,5 @@
 #include "DebugCamera.h"
-#include "TransformFunctions.h"
+#include "Utility/TransformFunctions.h"
 #include <algorithm> // std::clamp を使うために必要
 
 void DebugCamera::Initialize(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, const int kClientWidth, const int kClientHeight) {

@@ -1,6 +1,6 @@
 #pragma once
-#include "Structs.h" // 必要な構造体のインクルード
-#include "UtilityFunctions.h"
+#include "Utility/Structs.h" // 必要な構造体のインクルード
+#include "Utility/UtilityFunctions.h"
 
 class Object3D {
 public:

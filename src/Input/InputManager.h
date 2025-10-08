@@ -1,5 +1,5 @@
 #pragma once
-#include"Structs.h" // 必要なら自作Vector2型を定義
+#include"Utility/Structs.h" // 必要なら自作Vector2型を定義
 
 class InputManager {
 public:

@@ -2,6 +2,8 @@
 #include "Utility/Structs.h" // SoundDataなどを使うために必要
 #include <list>
 #include <memory> // std::unique_ptr を使うために必要
+#include <string>
+#include <map>
 
 // IXAudio2SourceVoiceを自動で破棄するためのカスタムデリータ
 struct SourceVoiceDeleter {
@@ -20,8 +22,12 @@ public:
     // 終了処理
     static void Finalize();
 
-    // 音声再生
-    static void Play(const SoundData &soundData);
+
+    // 音声データを読み込む（ハンドルとしてファイルパスを返す）
+    static const std::string & LoadSound(const std::string & filename);
+
+    // 音声再生（ハンドルを使って再生）
+    static void Play(const std::string & filename);
 
     // 毎フレームの更新処理（再生が終わったボイスを破棄する）
     static void Update();
@@ -33,4 +39,7 @@ private:
 
     // 再生中のボイスを管理するリスト
     static std::list<std::unique_ptr<IXAudio2SourceVoice, SourceVoiceDeleter>> playingVoices_;
+
+    // 読み込んだ音声データを管理するマップ
+    static std::map<std::string, SoundData> soundDatas_;
 };

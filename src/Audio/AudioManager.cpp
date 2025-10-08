@@ -18,6 +18,8 @@ void AudioManager::Initialize() {
 }
 
 void AudioManager::Finalize() {
+    // すべての再生中ボイスを破棄する
+    playingVoices_.clear();
     // playingVoices_はunique_ptrが自動で解放してくれるので、ここでは何もしなくて良い
     xAudio2_.Reset();
 }

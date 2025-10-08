@@ -44,9 +44,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ウィンドウクラスを登録する
 	RegisterClass(&wc);
 
-	// 出力ウィンドウの文字出力
-	OutputDebugStringA("Hello,DirectX\n");
-
 	// クライアント領域サイズ
 	const int32_t kClientWidth = 1280;
 	const int32_t kClientHeight = 720;
@@ -680,7 +677,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//AudioManagerを初期化
 	AudioManager::Initialize();
 
-	SoundData soundData1 = SoundLoadWave("resources/Alarm.wav");
+	const std::string alarmSoundHandle = AudioManager::LoadSound("resources/Alarm.wav");
 
 
 
@@ -897,7 +894,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// isSoundがtrueになり、かつ前のフレームではfalseだった場合に再生
 			if(isSound && !preIsSound) {
-				AudioManager::Play(soundData1); // ← こちらに変更
+				AudioManager::Play(alarmSoundHandle); // ← こちらに変更
 			}
 
 			/*********************************************************
@@ -1037,7 +1034,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	AudioManager::Finalize();
 	Sprite::StaticFinalize();
 	TextureManager::GetInstance()->Finalize();
-	SoundUnload(&soundData1);
 	CloseHandle(fenceEvent);
 
 

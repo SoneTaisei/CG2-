@@ -28,6 +28,7 @@ public:
 
 	Matrix4x4 GetViewMatrix() const { return viewMatrix_; }
 	Matrix4x4 GetProjectionMatrix() const { return projectionMatrix_; }
+	Vector3 GetTranslation() const { return translation_; }
 
 };
 

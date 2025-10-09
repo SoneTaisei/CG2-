@@ -19,14 +19,38 @@
     <Filter Include="シェーダーファイル">
       <UniqueIdentifier>{f3d5894e-636b-4780-8dcc-ce098f210b7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Engin">
+      <UniqueIdentifier>{ae5317b2-f446-4c9a-9502-9a5325c2c8ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Utility">
+      <UniqueIdentifier>{b0f35854-514b-425c-8378-802329fccd96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Sprite">
+      <UniqueIdentifier>{fc680504-5d96-4cf1-9c5d-7a885146d04d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Model">
+      <UniqueIdentifier>{4159e1c0-1f84-4fd6-9e28-c28b032bfc33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Input">
+      <UniqueIdentifier>{95b1649d-a60a-4b0c-af3b-d2386647ffca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Graphics">
+      <UniqueIdentifier>{c8cbf5e5-1cd1-4c7d-a177-31de7ae61b56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\GameObject">
+      <UniqueIdentifier>{08418ff0-d2ab-449b-befa-b2ad318c9c7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Core">
+      <UniqueIdentifier>{b931bbcf-4073-454c-8999-4d98ac9f693a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engin\Audio">
+      <UniqueIdentifier>{acc52285-0dfc-4a05-b99c-cad11283d7ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Application">
+      <UniqueIdentifier>{4cc3838d-cd6b-4813-b9f7-9e19ce99d797}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Core\main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utility\TransformFunctions.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -48,44 +72,50 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utility\UtilityFunctions.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\Audio\AudioManager.cpp">
+      <Filter>ソース ファイル\Engin\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\main.cpp">
+      <Filter>ソース ファイル\Engin\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Core\MyGameApp.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameObject\ResourceObject.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\DebugCamera.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Input\InputManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Engin\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject\Object3D.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Engin\GameObject</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\KeyboardInput.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\GameObject\ResourceObject.cpp">
+      <Filter>ソース ファイル\Engin\GameObject</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\GamepadInput.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp">
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Audio\AudioManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sprite\Sprite.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Model\Model.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="src\Graphics\DebugCamera.cpp">
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\TextureManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\GamepadInput.cpp">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\InputManager.cpp">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\KeyboardInput.cpp">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model\Model.cpp">
+      <Filter>ソース ファイル\Engin\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sprite\Sprite.cpp">
+      <Filter>ソース ファイル\Engin\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\UtilityFunctions.cpp">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\TransformFunctions.cpp">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,9 +127,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Utility\TransformFunctions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="externals\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -124,50 +151,53 @@
     <ClInclude Include="externals\imgui\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utility\Structs.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\UtilityFunctions.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\Audio\AudioManager.h">
+      <Filter>ソース ファイル\Engin\Audio</Filter>
     </ClInclude>
     <ClInclude Include="src\Core\MyGameApp.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameObject\ResourceObject.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Input\InputManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ソース ファイル\Engin\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\GameObject\Object3D.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ソース ファイル\Engin\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utility\BlendMode.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\GameObject\ResourceObject.h">
+      <Filter>ソース ファイル\Engin\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="src\Input\KeyboardInput.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h">
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Input\GamepadInput.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Audio\AudioManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sprite\Sprite.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Model\Model.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="src\Graphics\DebugCamera.h">
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Graphics\TextureManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ソース ファイル\Engin\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\GamepadInput.h">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\InputManager.h">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\KeyboardInput.h">
+      <Filter>ソース ファイル\Engin\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model\Model.h">
+      <Filter>ソース ファイル\Engin\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sprite\Sprite.h">
+      <Filter>ソース ファイル\Engin\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\BlendMode.h">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\Structs.h">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\TransformFunctions.h">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\UtilityFunctions.h">
+      <Filter>ソース ファイル\Engin\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

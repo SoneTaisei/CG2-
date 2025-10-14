@@ -15,7 +15,7 @@
 - **使用例**
   ```cpp
   if (KeyboardInput::GetInstance()->IsKeyDown(DIK_SPACE)) {
-      // スペースキーが押され続けているときの処理
+      // 処理
   }
 
 ### `IsKeyPressed(BYTE keyCode)`
@@ -32,7 +32,7 @@
 - **使用例**
   ```cpp
   if (KeyboardInput::GetInstance()->IsKeyPressed(DIK_SPACE)) {
-      // スペースキーが押され続けているときの処理
+      // 処理
   }
 
 ### `IsKeyReleased(BYTE keyCode);`
@@ -49,7 +49,7 @@
 - **使用例**
   ```cpp
   if (KeyboardInput::GetInstance()->IsKeyReleased(DIK_SPACE)) {
-      // スペースキーが押され続けているときの処理
+      // 処理
   }
 
 ## スプライト描画

@@ -7,6 +7,27 @@ void DebugCamera::Initialize(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, c
 	projectionMatrix_ = projectionMatrix;
 	kClientWidth_ = kClientWidth;
 	kClientHeight_ = kClientHeight;
+
+	// 初期値をメンバ変数に保存
+	initialRotation_ = rotation_;
+	initialTranslation_ = translation_;
+
+	// 行列の初期計算
+	UpdateMatrix();
+}
+
+// ビュー行列と射影行列の計算処理を独立させたメソッド
+void DebugCamera::UpdateMatrix() {
+	// 回転からカメラの基底ベクトルを計算
+	Matrix4x4 rotationMatrix = TransformFunctions::Multiply(
+		TransformFunctions::MakeRoteXMatrix(rotation_.x), TransformFunctions::MakeRoteYMatrix(rotation_.y));
+	// ビュー行列
+	Matrix4x4 translateMatrix = TransformFunctions::MakeTranslateMatrix({ -translation_.x, -translation_.y, -translation_.z });
+	Matrix4x4 rotateMatrixInv = TransformFunctions::Transpose(rotationMatrix);
+	viewMatrix_ = TransformFunctions::Multiply(translateMatrix, rotateMatrixInv);
+	// 射影行列
+	projectionMatrix_ =
+		TransformFunctions::MakePerspectiveFovMatrix(0.45f, float(kClientWidth_) / float(kClientHeight_), 0.1f, 100.0f);
 }
 
 void DebugCamera::Update() {
@@ -55,12 +76,13 @@ void DebugCamera::Update() {
 	}
 
 	// --- ビュー行列と射影行列の再計算 ---
-	// 1. ビュー行列（Inverseを使わない安全な方法）
-	Matrix4x4 translateMatrix = TransformFunctions::MakeTranslateMatrix({ -translation_.x, -translation_.y, -translation_.z });
-	Matrix4x4 rotateMatrixInv = TransformFunctions::Transpose(rotationMatrix);
-	viewMatrix_ = TransformFunctions::Multiply(translateMatrix, rotateMatrixInv);
+	// 行列の再計算
+	UpdateMatrix();
+}
 
-	// 2. 射影行列
-	projectionMatrix_ =
-		TransformFunctions::MakePerspectiveFovMatrix(0.45f, float(kClientWidth_) / float(kClientHeight_), 0.1f, 100.0f);
+// カメラの状態を初期値に戻すメソッド
+void DebugCamera::Reset() {
+	rotation_ = initialRotation_;
+	translation_ = initialTranslation_;
+	UpdateMatrix(); // 位置と回転をリセットした後、行列も更新する
 }

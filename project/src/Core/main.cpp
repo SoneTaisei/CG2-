@@ -455,17 +455,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
 	// BlendStateの設定
+	// PSOをブレンドモードの数だけ格納する配列
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStates[BlendMode::kCountOfBlnedMode];
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> spritePipelineStates[BlendMode::kCountOfBlnedMode];
+
+
+	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
+	// 全てのRGBAチャンネルに書き込み
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = true;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendEnable = true; // ブレンドを有効にする
+	// アルファ値のブレンド設定は全モードで共通
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
 	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-
-
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -483,58 +486,76 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 																	 L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
-	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
-	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
-	vertexShaderBlob->GetBufferSize() };
-	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
-	pixelShaderBlob->GetBufferSize() };
-	graphicsPipelineStateDesc.BlendState = blendDesc;
-	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
-	// 書き込むRTVの情報
-	graphicsPipelineStateDesc.NumRenderTargets = 1;
-	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	// 利用するトポロジーのタイプ。三角形を選択
-	graphicsPipelineStateDesc.PrimitiveTopologyType =
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	// どのように画面に色を打ち込むかの設定(気にしなくていい)
-	graphicsPipelineStateDesc.SampleDesc.Count = 1;
-	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-
+	// PSOの基本設定
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = rootSignature.Get();
+	psoDesc.InputLayout = inputLayoutDesc;
+	psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+	psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
+	psoDesc.RasterizerState = rasterizerDesc;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	// DepthStencilStateの設定
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	// Depthの機能を有効化する
 	depthStencilDesc.DepthEnable = true;
-	// 書き込みします
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	// 比較関数はLessEqual。つまり、近ければ描画される
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	psoDesc.DepthStencilState = depthStencilDesc;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	// DepthStencilの設定
-	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
-	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	// ブレンドモードごとにPSOを生成
+	for(int i = 0; i < static_cast<int>(BlendMode::kCountOfBlnedMode); ++i) {
+		BlendMode mode = static_cast<BlendMode>(i);
 
-	// 上で設定したものを実際に生成
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+		// ループの最初に必ずブレンド有効にリセットする
+		blendDesc.RenderTarget[0].BlendEnable = true;
 
-	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+		switch(mode) {
+		case BlendMode::kBlendModeNone: // ブレンドなし
+			blendDesc.RenderTarget[0].BlendEnable = false;
+			break;
+		case BlendMode::kBlendModeNomal: // 通常（アルファブレンド）
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+			break;
+		case BlendMode::kBlendModeAdd: // 加算
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		case BlendMode::kBlnedModeSubtract: // 減算
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		case BlendMode::kBlendModeMaltily: // 乗算
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+			break;
+		case BlendMode::kBlendModeScreen: // スクリーン
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		}
 
+		psoDesc.BlendState = blendDesc;
 
-	assert(SUCCEEDED(hr));
+		// 3Dモデル用のPSOを作成
+		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&graphicsPipelineStates[i]));
+		assert(SUCCEEDED(hr));
 
-	// --------------------------------------------------------------------
-	// スプライト用のパイプラインステートを作成（深度テストを無効にする）
-	// --------------------------------------------------------------------
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> spritePipelineState = nullptr;
-
-	// 既存の設定をコピーし、深度に関する設定だけ変更する
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC spritePipelineStateDesc = graphicsPipelineStateDesc;
-	spritePipelineStateDesc.DepthStencilState.DepthEnable = false; // 深度テストを無効化
-
-	// スプライト用のPSOを生成
-	hr = device->CreateGraphicsPipelineState(&spritePipelineStateDesc, IID_PPV_ARGS(&spritePipelineState));
-	assert(SUCCEEDED(hr));
+		// スプライト用のPSOを作成 (深度テスト無効)
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC spritePsoDesc = psoDesc;
+		spritePsoDesc.DepthStencilState.DepthEnable = false;
+		hr = device->CreateGraphicsPipelineState(&spritePsoDesc, IID_PPV_ARGS(&spritePipelineStates[i]));
+		assert(SUCCEEDED(hr));
+	}
 
 	// ビューポート
 	D3D12_VIEWPORT viewport{};
@@ -725,7 +746,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 音楽を鳴らすための変数
 	bool preIsSound = false;
 
-	
+	// 現在選択中のブレンドモード
+	int currentBlendMode = static_cast<int>(BlendMode::kBlendModeNomal);
 
 	// 全キーの入力状態を取得する
 	BYTE keys[256] = {};
@@ -801,6 +823,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					// 光の位置を変える
 					ImGui::DragFloat3("LightingDirection", &directionalLightData.direction.x, 0.1f, 0.01f, 0.01f);
+
+					const char *blendModeItems[] = { "Normal", "Add", "Subtract", "Multiply", "Screen" };
+					ImGui::Combo("Blend Mode", &currentBlendMode, blendModeItems, IM_ARRAYSIZE(blendModeItems));
 
 					ImGui::TreePop();
 				}
@@ -903,7 +928,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// --- 3Dモデルの描画準備 ---
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
-			commandList->SetPipelineState(graphicsPipelineState.Get()); // 3Dモデル用のPSO
+			commandList->SetPipelineState(graphicsPipelineStates[currentBlendMode].Get()); // 3Dモデル用のPSO
 			Model::PreDraw(commandList.Get());
 
 			// この行を追加します
@@ -929,6 +954,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// --- モデルの描画 ---
 			if(isModel) {
+				commandList->SetPipelineState(spritePipelineStates[currentBlendMode].Get());
 				// まず、TextureManagerを使って整理番号(uvCheckerHandle)からGPUハンドルを取得する
 				D3D12_GPU_DESCRIPTOR_HANDLE planeGpuHandle = TextureManager::GetInstance()->GetGpuHandle(planeTextureHandle);
 				// 取得したGPUハンドルをDraw関数に渡す
@@ -937,7 +963,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			if(isSprite) {
 				// スプライトを描画する前に、スプライト専用のPSOに切り替える
-				commandList->SetPipelineState(spritePipelineState.Get());
+				commandList->SetPipelineState(spritePipelineStates[currentBlendMode].Get());
 
 				// スプライト描画の開始を宣言
 				Sprite::PreDraw(commandList.Get());

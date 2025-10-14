@@ -649,6 +649,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Model *sphereModel = Model::CreateSphere();
 	Model *planeModel = Model::CreateFromObj("resources/plane", "plane.obj");
+	Model *fenceModel = Model::CreateFromObj("resources/fence", "fence.obj");
 
 	// TextureManagerを使ってテクスチャを読み込む
 	// この関数はテクスチャのハンドル(uint32_t型のインデックス)を返す
@@ -656,6 +657,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	uint32_t monsterBallHandle = TextureManager::GetInstance()->Load("resources/monsterBall.png", commandList.Get());
 	ModelData planeDataForTexture = planeModel->GetModelData();
 	uint32_t planeTextureHandle = TextureManager::GetInstance()->Load(planeDataForTexture.material.textureFilePath, commandList.Get());
+	ModelData fenceDataForTexture = fenceModel->GetModelData();
+	uint32_t fenceHandle = TextureManager::GetInstance()->Load(fenceDataForTexture.material.textureFilePath, commandList.Get());
 
 	// コマンドを閉じる
 	hr = commandList->Close();
@@ -731,6 +734,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{1.0f, 1.0f, 1.0f},   // scale
 	{0.0f, 0.0f, 0.0f},   // rotate
 	{0.0f, 0.0f, 0.0f}    // translate
+	};
+
+	Transform transformFence = {
+	{1.0f, 1.0f, 1.0f},   // scale
+	{0.0f, 0.0f, 0.0f},   // rotate
+	{0.0f, 0.0f, 3.0f}    // translate
 	};
 
 	bool useMonsterBall = true;
@@ -946,50 +955,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*mappedDirectionalLightData = directionalLightData;
 			commandList->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 
-			// --- 球の描画 ---
-			if(isSphere) {
-				D3D12_GPU_DESCRIPTOR_HANDLE sphereTextureHandle = useMonsterBall ? TextureManager::GetInstance()->GetGpuHandle(monsterBallHandle) : TextureManager::GetInstance()->GetGpuHandle(uvCheckerHandle);
-				sphereModel->Draw(transformSphere, viewProjectionData->viewProjectionMatrix, sphereTextureHandle);
-			}
 
-			// --- モデルの描画 ---
-			if(isModel) {
-				commandList->SetPipelineState(spritePipelineStates[currentBlendMode].Get());
-				// まず、TextureManagerを使って整理番号(uvCheckerHandle)からGPUハンドルを取得する
-				D3D12_GPU_DESCRIPTOR_HANDLE planeGpuHandle = TextureManager::GetInstance()->GetGpuHandle(planeTextureHandle);
-				// 取得したGPUハンドルをDraw関数に渡す
-				planeModel->Draw(transformModel, viewProjectionData->viewProjectionMatrix, planeGpuHandle);
-			}
-
-			if(isSprite) {
-				// スプライトを描画する前に、スプライト専用のPSOに切り替える
-				commandList->SetPipelineState(spritePipelineStates[currentBlendMode].Get());
-
-				// スプライト描画の開始を宣言
-				Sprite::PreDraw(commandList.Get());
-
-				// Sprite::Draw() で描画
-				Sprite::Draw(
-					pos[0], pos[1],                           // 位置
-					size[0], size[1],                         // サイズ
-					uvCheckerHandle,                                        // テクスチャハンドル (0: uvChecker)
-					scale[0], scale[1],                       // 拡縮
-					angle,                                    // 回転
-					{ color[0], color[1], color[2], color[3] } // 色
-				);
-
-				Sprite::Draw(
-					640.0f, 360.0f,                   // 位置 (X=640, Y=360)
-					128.0f, 128.0f,                   // サイズ (128x128ピクセル)
-					monsterBallHandle,                                // テクスチャハンドル (1: モンスターボール)
-					1.0f, 1.0f,                       // 拡縮 (等倍)
-					0.0f,                             // 回転 (なし)
-					{ 1.0f, 1.0f, 1.0f, 1.0f }          // 色 (不透明な白)
-				);
-
-				// 別のスプライトも簡単に追加できる
-				Sprite::Draw(150, 50, 100, 100, 1); // 座標(50,50)にサイズ100x100でモンスターボールを描画
-			}
+			//フェンスの描画
+			D3D12_GPU_DESCRIPTOR_HANDLE fenceGpuHandle = TextureManager::GetInstance()->GetGpuHandle(fenceHandle);
+			fenceModel->Draw(transformFence, viewProjectionData->viewProjectionMatrix, fenceGpuHandle);
 
 			// ImGUiの内部コマンドを生成する
 			ImGui::Render();
@@ -1043,6 +1012,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// Modelインスタンスを解放する処理を追加
 	delete planeModel;
 	delete sphereModel;
+	delete fenceModel;
 
 	// ======== ImGui解放 ============
 	ImGui_ImplDX12_Shutdown();

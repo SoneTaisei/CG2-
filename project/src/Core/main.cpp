@@ -753,6 +753,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	BYTE keys[256] = {};
 	BYTE preKeys[256] = {};
 
+	bool debugCameraMode = false;
+
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
 	while(msg.message != WM_QUIT) {
@@ -871,8 +873,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::ColorEdit4("Color", color);
 			ImGui::End();
 
-			// カメラの呼び出し
-			debugCamera.Update();
+			//デバッグカメラの処理
+			if(KeyboardInput::GetInstance()->IsKeyPressed(DIK_F3)) {
+				debugCameraMode = !debugCameraMode; // F3キーでモードをトグル(ON/OFF切り替え)
+				if(!debugCameraMode) {
+					// デバッグカメラをOFFにした瞬間に、カメラの状態をリセットする
+					debugCamera.Reset();
+				}
+			}
+			if(debugCameraMode) {
+				debugCamera.Update();
+			}
 
 			// ゲームの処理
 			backBufferIndex = swapChain.Get()->GetCurrentBackBufferIndex();
@@ -947,10 +958,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 
 			// --- 球の描画 ---
-			if(isSphere) {
+			/*if(isSphere) {
 				D3D12_GPU_DESCRIPTOR_HANDLE sphereTextureHandle = useMonsterBall ? TextureManager::GetInstance()->GetGpuHandle(monsterBallHandle) : TextureManager::GetInstance()->GetGpuHandle(uvCheckerHandle);
 				sphereModel->Draw(transformSphere, viewProjectionData->viewProjectionMatrix, sphereTextureHandle);
-			}
+			}*/
 
 			// --- モデルの描画 ---
 			if(isModel) {

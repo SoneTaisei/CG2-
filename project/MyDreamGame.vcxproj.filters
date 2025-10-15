@@ -117,6 +117,16 @@
     <ClCompile Include="src\Utility\TransformFunctions.cpp">
       <Filter>ソース ファイル\Engin\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scene\TitleScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene\StageSelectScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene\GameScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene\SceneManager.cpp">
     <ClCompile Include="src\Platform\WindowsApplication.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -202,6 +212,19 @@
     <ClInclude Include="src\Utility\UtilityFunctions.h">
       <Filter>ソース ファイル\Engin\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\IScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\TitleScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\StageSelectScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\GameScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\SceneManager.h">
     <ClInclude Include="src\Platform\WindowsApplication.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

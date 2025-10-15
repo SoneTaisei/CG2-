@@ -150,6 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Scene\SceneManager.cpp" />
+    <ClCompile Include="src\Scene\GameScene.cpp" />
     <ClCompile Include="src\Model\Model.cpp" />
     <ClCompile Include="src\Sprite\Sprite.cpp" />
     <ClCompile Include="src\Audio\AudioManager.cpp" />
@@ -175,6 +177,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\Utility\TransformFunctions.cpp" />
     <ClCompile Include="src\Utility\UtilityFunctions.cpp" />
     <ClCompile Include="src\Graphics\TextureManager.cpp" />
+    <ClCompile Include="src\Scene\TitleScene.cpp" />
+    <ClCompile Include="src\Scene\StageSelectScene.cpp" />
     <ClCompile Include="src\Platform\WindowsApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -196,7 +200,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Scene\SceneManager.h" />
+    <ClInclude Include="src\Scene\GameScene.h" />
     <ClInclude Include="src\Model\Model.h" />
+    <ClInclude Include="src\Scene\IScene.h" />
     <ClInclude Include="src\Sprite\Sprite.h" />
     <ClInclude Include="src\Audio\AudioManager.h" />
     <ClInclude Include="src\Input\GamepadInput.h" />
@@ -220,6 +227,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\Utility\TransformFunctions.h" />
     <ClInclude Include="src\Utility\UtilityFunctions.h" />
     <ClInclude Include="src\Graphics\TextureManager.h" />
+    <ClInclude Include="src\Scene\TitleScene.h" />
+    <ClInclude Include="src\Scene\StageSelectScene.h" />
     <ClInclude Include="src\Platform\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>

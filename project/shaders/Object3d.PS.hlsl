@@ -40,6 +40,12 @@ float4 main(VertexShaderOutput input) : SV_TARGET {
 
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+    
+    // 例えば、アルファ値が0.1未満のピクセルは描画しない
+    if (textureColor.a < 0.5f) {
+        discard;
+    }
+    
     float4 color;
 
     float NdotL = dot(normal, lightDir);

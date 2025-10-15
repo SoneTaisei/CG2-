@@ -18,9 +18,5 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// メインループの実行
 	app->Run();
 
-	// Finalizeはappのデストラクタで自動的に呼ばれるように設計すると、
-	// この行も不要になり、さらにシンプルになります。
-	// app->Finalize(); 
-
 	return 0;
 }

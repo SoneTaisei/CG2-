@@ -10,10 +10,10 @@ on:
 
 # ワークフロー全体で使う環境変数
 env:
-  # ★★★【要変更】あなたのソリューションファイルのパスに書き換えてください
-  SOLUTION_FILE_PATH: project/YourSolution.sln 
+  # あなたのソリューションファイルのパスに書き換えてください
+  SOLUTION_FILE_PATH: project/MyDreamGame.sln 
 
-  # ★★★【要変更】ビルド構成を Debug または Release に設定してください
+  # ビルド構成を Debug または Release に設定してください
   CONFIGURATION: Debug
 
 # 実行するジョブ（仕事）の内容

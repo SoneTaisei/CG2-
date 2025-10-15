@@ -2,6 +2,10 @@
 #include"Utility/Structs.h"
 class DebugCamera {
 private:
+	// 初期状態
+	Vector3 initialRotation_;
+	Vector3 initialTranslation_;
+	
 	// x,y,z軸周りのローカル回転角度
 	Vector3 rotation_ = { 0,0,0 };
 	// ローカル座標
@@ -14,6 +18,10 @@ private:
 	int kClientWidth_;
 	int kClientHeight_;
 
+	/// <summary>
+	/// ビュー行列と射影行列を更新する
+	/// </summary>
+	void UpdateMatrix();
 
 public:
 	/// <summary>
@@ -25,6 +33,11 @@ public:
 	/// 更新
 	/// </summary>
 	void Update();
+
+	/// <summary>
+	/// カメラの状態を初期値にリセットする
+	/// </summary>
+	void Reset();
 
 	Matrix4x4 GetViewMatrix() const { return viewMatrix_; }
 	Matrix4x4 GetProjectionMatrix() const { return projectionMatrix_; }

@@ -179,6 +179,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\Graphics\TextureManager.cpp" />
     <ClCompile Include="src\Scene\TitleScene.cpp" />
     <ClCompile Include="src\Scene\StageSelectScene.cpp" />
+    <ClCompile Include="src\Platform\WindowsApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Object3d.PS.hlsl">
@@ -228,6 +229,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\Graphics\TextureManager.h" />
     <ClInclude Include="src\Scene\TitleScene.h" />
     <ClInclude Include="src\Scene\StageSelectScene.h" />
+    <ClInclude Include="src\Platform\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

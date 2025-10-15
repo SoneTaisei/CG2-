@@ -6,7 +6,7 @@ on:
   # mainブランチにpushされたときに実行
   push:
     branches:
-      - main # ご自身のブランチ名に合わせて master などに変更してください
+      - master
 
 # ワークフロー全体で使う環境変数
 env:

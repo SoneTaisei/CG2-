@@ -10,7 +10,6 @@
 #include"Sprite/Sprite.h"
 #include "Model/Model.h"
 
-
 const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
 

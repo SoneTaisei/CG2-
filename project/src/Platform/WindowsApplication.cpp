@@ -152,6 +152,9 @@ void WindowsApplication::Run() {
 
             // (ここにゲームの描画コマンド)
 
+            ID3D12DescriptorHeap *pHeaps[] = { TextureManager::GetInstance()->GetSrvDescriptorHeap() };
+            commandList_->SetDescriptorHeaps(1, pHeaps);
+
             // ImGuiの描画
             ImGui::Render();
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList_.Get());

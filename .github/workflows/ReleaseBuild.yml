@@ -1,20 +1,23 @@
 # ワークフロー（自動化処理）の名前
-name: C++ Build Workflow
+name: C++ Release Workflow
 
 # ワークフローを実行するきっかけ（トリガー）
 on:
-  # mainブランチにpushされたときに実行
+  # masterブランチにpushされたときに実行
   push:
     branches:
       - master
 
+  # Actionsタブから手動で実行できるようにするトリガー
+  workflow_dispatch:
+
 # ワークフロー全体で使う環境変数
 env:
-  # あなたのソリューションファイルのパスに書き換えてください
-  SOLUTION_FILE_PATH: project/MyDreamGame.sln 
+  # あなたのソリューションファイルのパス
+  SOLUTION_FILE_PATH: project/MyDreamGame.sln
 
-  # ビルド構成を Debug または Release に設定してください
-  CONFIGURATION: Debug
+  # ビルド構成を Release に設定
+  CONFIGURATION: Release
 
 # 実行するジョブ（仕事）の内容
 jobs:

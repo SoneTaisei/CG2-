@@ -12,12 +12,13 @@ public:
     SceneManager();
     ~SceneManager();
 
-    void Initialize();
+    void Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList);
     void Update();
-    void Draw();
+    void Draw(const Matrix4x4 &viewProjectionMatrix);
 
     void ChangeScene(IScene *newScene);
 
 private:
     std::unique_ptr<IScene> currentScene_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
 };

@@ -5,10 +5,11 @@ SceneManager::SceneManager() {}
 
 SceneManager::~SceneManager() {}
 
-void SceneManager::Initialize() {
+void SceneManager::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {
     // 最初のシーンをタイトルに設定
     currentScene_ = std::make_unique<TitleScene>();
-    currentScene_->Initialize();
+    currentScene_->Initialize(commandList);
+    commandList_ = commandList;
 }
 
 void SceneManager::Update() {
@@ -17,9 +18,9 @@ void SceneManager::Update() {
     }
 }
 
-void SceneManager::Draw() {
+void SceneManager::Draw(const Matrix4x4 &viewProjectionMatrix) {
     if(currentScene_) {
-        currentScene_->Draw();
+        currentScene_->Draw(viewProjectionMatrix);
     }
 }
 
@@ -28,5 +29,5 @@ void SceneManager::ChangeScene(IScene *newScene) {
 
     // 現在のシーンを破棄し、新しいシーンを設定
     currentScene_.reset(newScene);
-    currentScene_->Initialize();
+    currentScene_->Initialize(commandList_);
 }

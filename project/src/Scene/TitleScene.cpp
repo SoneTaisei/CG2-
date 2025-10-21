@@ -10,14 +10,17 @@ void TitleScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> co
 	commandList_ = commandList;
 	model_ = Model::CreateFromObj("resources/plane", "plane.obj");
 
+	ModelData planeDataForTexture = model_->GetModelData();
+	textureHandle_ = TextureManager::GetInstance()->Load(planeDataForTexture.material.textureFilePath, commandList.Get());
+
 	// テクスチャをロード
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/uvChecker.png",commandList_);
+	//textureHandle_ = TextureManager::GetInstance()->Load("resources/uvChecker.png",commandList_.Get());
 
 	// 座標を初期化
 	transform_ = {
 		{1.0f, 1.0f, 1.0f}, // Scale
 		{0.0f, 0.0f, 0.0f}, // Rotate
-		{0.0f, -1.5f, 0.0f}  // Translate
+		{0.0f, 0.0f, 0.0f}  // Translate
 	};
 }
 
@@ -40,7 +43,8 @@ void TitleScene::Draw(const Matrix4x4 &viewProjectionMatrix) {
 	// 取得したGPUハンドルをDraw関数に渡す
 	model_->Draw(transform_,viewProjectionMatrix, planeGpuHandle);
 
-	/*Sprite::PreDraw(commandList.Get());
-	Sprite::Draw(150, 50, 100, 100, 1);*/
+	//Sprite::PreDraw(commandList_.Get());
+	//Sprite::Draw(150, 50, 100, 100, planeGpuHandle);
+	//Sprite::Draw(150, 80, 100, 100, planeGpuHandle);
 
 }

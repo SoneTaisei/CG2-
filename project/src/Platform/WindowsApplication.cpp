@@ -87,6 +87,12 @@ void WindowsApplication::Initialize() {
     Model::StaticInitialize(device_.Get());
     TextureManager::GetInstance()->Initialize(device_);
 
+    std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
+    for(size_t i = 0; i < TextureManager::GetInstance()->GetTextureCount(); ++i) {
+        textureHandles.push_back(TextureManager::GetInstance()->GetGpuHandle(static_cast<uint32_t>(i)));
+    }
+    Sprite::StaticInitialize(device_.Get(), kWindowWidth_, kWindowHeight_, textureHandles);
+
     CreatePipelines();
 
     // ViewProjectionリソースの作成
@@ -143,6 +149,26 @@ void WindowsApplication::Initialize() {
 
     fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
     assert(fenceEvent_ != nullptr);
+
+    // コマンドリストを確定させて実行
+    hr = commandList_->Close();
+    assert(SUCCEEDED(hr));
+    ID3D12CommandList *commandLists[] = { commandList_.Get() };
+    commandQueue_->ExecuteCommandLists(1, commandLists);
+
+    // GPUの完了を待つ
+    fenceValue_++;
+    commandQueue_->Signal(fence_.Get(), fenceValue_);
+    if(fence_->GetCompletedValue() < fenceValue_) {
+        fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+        WaitForSingleObject(fenceEvent_, INFINITE);
+    }
+
+    // 次のフレームの準備
+    hr = commandAllocator_->Reset();
+    assert(SUCCEEDED(hr));
+    hr = commandList_->Reset(commandAllocator_.Get(), nullptr);
+    assert(SUCCEEDED(hr));
 }
 
 void WindowsApplication::Run() {
@@ -166,7 +192,7 @@ void WindowsApplication::Run() {
             ImGui::NewFrame();
 
             // (ここにImGuiのUI記述やゲームの更新処理)
-            ImGui::ShowDemoWindow();
+            //ImGui::ShowDemoWindow();
 
             KeyboardInput::GetInstance()->Update();
 
@@ -198,6 +224,8 @@ void WindowsApplication::Run() {
             //画面クリア
             float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
             commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+
+            commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
             ID3D12DescriptorHeap *pHeaps[] = { TextureManager::GetInstance()->GetSrvDescriptorHeap() };
             commandList_->SetDescriptorHeaps(1, pHeaps);
@@ -370,42 +398,42 @@ void WindowsApplication::CreatePipelines() {
     D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
     descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    descriptorRange[0].BaseShaderRegister = 3; // t0
+    D3D12_DESCRIPTOR_RANGE descriptorRange[2] = {};
+    descriptorRange[0].BaseShaderRegister = 3;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    descriptorRange[1].BaseShaderRegister = 4;
+    descriptorRange[1].NumDescriptors = 3;
+    descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER rootParameters[5] = {};
-    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // b0 : for Material
+    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
+    rootParameters[0].Descriptor.RegisterSpace = 0; // ← 追加
 
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS; // b0 : for WVP
+    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParameters[1].Constants.Num32BitValues = sizeof(TransformMatrix) / 4;
     rootParameters[1].Constants.ShaderRegister = 0;
+    rootParameters[1].Constants.RegisterSpace = 0; // ← 追加
 
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // t0 : for Texture
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
 
-    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // b1 : for ViewProjection
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // Vertex Shaderで使う
-    rootParameters[3].Descriptor.ShaderRegister = 1;
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].Descriptor.ShaderRegister = 3;
+    rootParameters[3].Descriptor.RegisterSpace = 0; // ← 追加
 
-    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // b2 : for DirectionalLight
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[4].Descriptor.ShaderRegister = 1; // レジスタ番号をずらす
-
-    descriptionRootSignature.pParameters = rootParameters;
-    descriptionRootSignature.NumParameters = _countof(rootParameters);
-
-    // ※注意：main.cppのrootParametersにはViewProjectionやLightも含まれていましたが、
-    // SceneManagerで描画する設計の場合、これらは描画時に外部から設定する方が一般的です。
-    // ここでは、ModelのDrawに必要な最低限のパラメータで構成し直しています。
-    // もし固定で使いたい場合は、main.cppの定義に戻してください。
+    rootParameters[4].Descriptor.ShaderRegister = 1;
+    rootParameters[4].Descriptor.RegisterSpace = 0; // ← 追加
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);

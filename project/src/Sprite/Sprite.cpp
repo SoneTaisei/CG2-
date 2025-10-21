@@ -76,7 +76,7 @@ void Sprite::PreDraw(ID3D12GraphicsCommandList *commandList) {
 
 void Sprite::Draw(
     float destX, float destY, float width, float height,
-    uint32_t textureHandle, float scaleX, float scaleY,
+    D3D12_GPU_DESCRIPTOR_HANDLE textureHandle, float scaleX, float scaleY,
     float angle, const Vector4 &color) {
 
     // スプライトの実際の幅と高さを計算
@@ -114,7 +114,7 @@ void Sprite::Draw(
     sCommandList_->SetGraphicsRoot32BitConstants(1, sizeof(TransformMatrix) / 4, &transformMatrix, 0);
 
     // 古い SetGraphicsRootConstantBufferView(1, ...) は不要
-    sCommandList_->SetGraphicsRootDescriptorTable(2, sTextureSrvHandles_[textureHandle]);
+    sCommandList_->SetGraphicsRootDescriptorTable(2, textureHandle);
 
     // 描画
     sCommandList_->DrawIndexedInstanced(kIndexCount, 1, 0, 0, 0);

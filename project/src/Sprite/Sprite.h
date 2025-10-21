@@ -21,7 +21,7 @@ public:
     static void Draw(
         float destX, float destY,         // 描画先の左上座標
         float width, float height,        // スプライトの幅と高さ
-        uint32_t textureHandle,           // テクスチャハンドル (インデックス)
+        D3D12_GPU_DESCRIPTOR_HANDLE textureHandle,           // テクスチャハンドル (インデックス)
         float scaleX = 1.0f, float scaleY = 1.0f, // 拡縮率
         float angle = 0.0f,               // 回転角度 (Z軸周り、ラジアン)
         const Vector4 &color = { 1.0f, 1.0f, 1.0f, 1.0f } // 色

@@ -145,6 +145,7 @@ void WindowsApplication::Initialize() {
     materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
     materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
     materialData->lightingType = 0;
+    materialData->uvTransform = TransformFunctions::MakeIdentity4x4();
     materialResource->Unmap(0, nullptr);
 
     fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);

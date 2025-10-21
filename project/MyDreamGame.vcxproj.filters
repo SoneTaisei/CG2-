@@ -1,242 +1,78 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="ヘッダー ファイル">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="リソース ファイル">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{dcc10227-0303-494f-8736-ad0b8a0b3508}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="シェーダーファイル">
-      <UniqueIdentifier>{f3d5894e-636b-4780-8dcc-ce098f210b7a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin">
-      <UniqueIdentifier>{ae5317b2-f446-4c9a-9502-9a5325c2c8ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Utility">
-      <UniqueIdentifier>{b0f35854-514b-425c-8378-802329fccd96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Sprite">
-      <UniqueIdentifier>{fc680504-5d96-4cf1-9c5d-7a885146d04d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Model">
-      <UniqueIdentifier>{4159e1c0-1f84-4fd6-9e28-c28b032bfc33}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Input">
-      <UniqueIdentifier>{95b1649d-a60a-4b0c-af3b-d2386647ffca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Graphics">
-      <UniqueIdentifier>{c8cbf5e5-1cd1-4c7d-a177-31de7ae61b56}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\GameObject">
-      <UniqueIdentifier>{08418ff0-d2ab-449b-befa-b2ad318c9c7e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Core">
-      <UniqueIdentifier>{b931bbcf-4073-454c-8999-4d98ac9f693a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Engin\Audio">
-      <UniqueIdentifier>{acc52285-0dfc-4a05-b99c-cad11283d7ad}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Application">
-      <UniqueIdentifier>{4cc3838d-cd6b-4813-b9f7-9e19ce99d797}</UniqueIdentifier>
-    </Filter>
+    <FxCompile Include="shaders\Object3d.PS.hlsl" />
+    <FxCompile Include="shaders\Object3d.VS.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="externals\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_tables.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Audio\AudioManager.cpp">
-      <Filter>ソース ファイル\Engin\Audio</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Core\main.cpp">
-      <Filter>ソース ファイル\Engin\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Core\MyGameApp.cpp">
-      <Filter>ソース ファイル\Engin\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameObject\Object3D.cpp">
-      <Filter>ソース ファイル\Engin\GameObject</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameObject\ResourceObject.cpp">
-      <Filter>ソース ファイル\Engin\GameObject</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\DebugCamera.cpp">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\TextureManager.cpp">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Input\GamepadInput.cpp">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Input\InputManager.cpp">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Input\KeyboardInput.cpp">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Model\Model.cpp">
-      <Filter>ソース ファイル\Engin\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sprite\Sprite.cpp">
-      <Filter>ソース ファイル\Engin\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utility\UtilityFunctions.cpp">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utility\TransformFunctions.cpp">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene\TitleScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene\StageSelectScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene\GameScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene\SceneManager.cpp">
-    <ClCompile Include="src\Platform\WindowsApplication.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
+    <ClCompile Include="src\Scene\SceneManager.cpp" />
+    <ClCompile Include="src\Scene\GameScene.cpp" />
+    <ClCompile Include="src\Model\Model.cpp" />
+    <ClCompile Include="src\Sprite\Sprite.cpp" />
+    <ClCompile Include="src\Audio\AudioManager.cpp" />
+    <ClCompile Include="src\Input\GamepadInput.cpp" />
+    <ClCompile Include="src\Input\KeyboardInput.cpp" />
+    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp" />
+    <ClCompile Include="src\Graphics\DebugCamera.cpp" />
+    <ClCompile Include="externals\imgui\imgui.cpp" />
+    <ClCompile Include="externals\imgui\imgui_demo.cpp" />
+    <ClCompile Include="externals\imgui\imgui_draw.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="externals\imgui\imgui_tables.cpp" />
+    <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Input\InputManager.cpp" />
+    <ClCompile Include="src\Core\main.cpp" />
+    <ClCompile Include="src\Core\MyGameApp.cpp" />
+    <ClCompile Include="src\GameObject\Object3D.cpp" />
+    <ClCompile Include="src\GameObject\ResourceObject.cpp" />
+    <ClCompile Include="src\Utility\TransformFunctions.cpp" />
+    <ClCompile Include="src\Utility\UtilityFunctions.cpp" />
+    <ClCompile Include="src\Graphics\TextureManager.cpp" />
+    <ClCompile Include="src\Scene\TitleScene.cpp" />
+    <ClCompile Include="src\Scene\StageSelectScene.cpp" />
+    <ClCompile Include="src\Platform\WindowsApplication.cpp" />
+    <ClCompile Include="src\Sprite\SpriteCommon.cpp" />
+    <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\Object3d.VS.hlsl">
-      <Filter>シェーダーファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\Object3d.PS.hlsl">
-      <Filter>シェーダーファイル</Filter>
-    </FxCompile>
+    <ClInclude Include="src\Scene\SceneManager.h" />
+    <ClInclude Include="src\Scene\GameScene.h" />
+    <ClInclude Include="src\Model\Model.h" />
+    <ClInclude Include="src\Scene\IScene.h" />
+    <ClInclude Include="src\Sprite\Sprite.h" />
+    <ClInclude Include="src\Audio\AudioManager.h" />
+    <ClInclude Include="src\Input\GamepadInput.h" />
+    <ClInclude Include="src\Input\KeyboardInput.h" />
+    <ClInclude Include="src\Utility\BlendMode.h" />
+    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h" />
+    <ClInclude Include="src\Graphics\DebugCamera.h" />
+    <ClInclude Include="externals\imgui\imconfig.h" />
+    <ClInclude Include="externals\imgui\imgui.h" />
+    <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="externals\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="externals\imgui\imgui_internal.h" />
+    <ClInclude Include="externals\imgui\imstb_rectpack.h" />
+    <ClInclude Include="externals\imgui\imstb_textedit.h" />
+    <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="src\Input\InputManager.h" />
+    <ClInclude Include="src\Core\MyGameApp.h" />
+    <ClInclude Include="src\GameObject\Object3D.h" />
+    <ClInclude Include="src\GameObject\ResourceObject.h" />
+    <ClInclude Include="src\Utility\Structs.h" />
+    <ClInclude Include="src\Utility\TransformFunctions.h" />
+    <ClInclude Include="src\Utility\UtilityFunctions.h" />
+    <ClInclude Include="src\Graphics\TextureManager.h" />
+    <ClInclude Include="src\Scene\TitleScene.h" />
+    <ClInclude Include="src\Scene\StageSelectScene.h" />
+    <ClInclude Include="src\Platform\WindowsApplication.h" />
+    <ClInclude Include="src\Sprite\SpriteCommon.h" />
+    <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="externals\imgui\imconfig.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imgui_impl_dx12.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imgui_impl_win32.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imstb_rectpack.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imstb_textedit.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imstb_truetype.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\imgui\imgui.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Audio\AudioManager.h">
-      <Filter>ソース ファイル\Engin\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Core\MyGameApp.h">
-      <Filter>ソース ファイル\Engin\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameObject\Object3D.h">
-      <Filter>ソース ファイル\Engin\GameObject</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameObject\ResourceObject.h">
-      <Filter>ソース ファイル\Engin\GameObject</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\DebugCamera.h">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\TextureManager.h">
-      <Filter>ソース ファイル\Engin\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Input\GamepadInput.h">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Input\InputManager.h">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Input\KeyboardInput.h">
-      <Filter>ソース ファイル\Engin\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Model\Model.h">
-      <Filter>ソース ファイル\Engin\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sprite\Sprite.h">
-      <Filter>ソース ファイル\Engin\Sprite</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\BlendMode.h">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\Structs.h">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\TransformFunctions.h">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\UtilityFunctions.h">
-      <Filter>ソース ファイル\Engin\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Scene\IScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Scene\TitleScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Scene\StageSelectScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Scene\GameScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Scene\SceneManager.h">
-    <ClInclude Include="src\Platform\WindowsApplication.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
+    <None Include="shaders\Object3d.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="externals\imgui\LICENSE.txt">
-      <Filter>imgui</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\Object3d.hlsli">
-      <Filter>シェーダーファイル</Filter>
-    </None>
+    <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
 </Project>

@@ -3,12 +3,9 @@
 #include "Input/KeyboardInput.h"
 #include "../externals/imgui/imgui.h"
 
-void StageSelectScene::Initialize() {}
+void StageSelectScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {}
 
 void StageSelectScene::Update(SceneManager *sceneManager) {
-    ImGui::Begin("Scene Info");
-    ImGui::Text("This is StageSelect Scene.");
-    ImGui::End();
 
     // スペースキーが押されたらゲームシーンへ
     if(KeyboardInput::GetInstance()->IsKeyPressed(DIK_SPACE)) {
@@ -16,6 +13,6 @@ void StageSelectScene::Update(SceneManager *sceneManager) {
     }
 }
 
-void StageSelectScene::Draw() {
+void StageSelectScene::Draw(const Matrix4x4 &viewProjectionMatrix) {
     // ここにステージセレクトシーンの描画処理を記述する
 }

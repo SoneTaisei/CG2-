@@ -150,6 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
+    <ClCompile Include="src\Sprite\SpriteCommon.cpp" />
     <ClCompile Include="src\Scene\SceneManager.cpp" />
     <ClCompile Include="src\Scene\GameScene.cpp" />
     <ClCompile Include="src\Model\Model.cpp" />
@@ -200,6 +202,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
+    <ClInclude Include="src\Sprite\SpriteCommon.h" />
     <ClInclude Include="src\Scene\SceneManager.h" />
     <ClInclude Include="src\Scene\GameScene.h" />
     <ClInclude Include="src\Model\Model.h" />

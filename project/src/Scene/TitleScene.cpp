@@ -36,7 +36,7 @@ void TitleScene::Draw(const Matrix4x4 &viewProjectionMatrix) {
 
 	// まず、TextureManagerを使って整理番号(uvCheckerHandle)からGPUハンドルを取得する
 	D3D12_GPU_DESCRIPTOR_HANDLE planeGpuHandle = TextureManager::GetInstance()->GetGpuHandle(textureHandle_);
-	model_->CreateSphere();
+	//model_->CreateSphere();
 	// 取得したGPUハンドルをDraw関数に渡す
 	model_->Draw(transform_,viewProjectionMatrix, planeGpuHandle);
 

@@ -133,6 +133,14 @@ void WindowsApplication::Initialize() {
     HRESULT hr = device_->CreateFence(fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
     assert(SUCCEEDED(hr));
 
+    const UINT materialBufferSize = (sizeof(Material) + 255) & ~255u;
+    materialResource = CreateBufferResource(device_.Get(), materialBufferSize);
+    materialData = nullptr;
+    materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
+    materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    materialData->lightingType = 0;
+    materialResource->Unmap(0, nullptr);
+
     fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
     assert(fenceEvent_ != nullptr);
 }
@@ -198,6 +206,7 @@ void WindowsApplication::Run() {
             commandList_->RSSetViewports(1, &viewport_);
             commandList_->RSSetScissorRects(1, &scissorRect_);
             commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            commandList_->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
             commandList_->SetGraphicsRootConstantBufferView(3, viewProjectionResource_->GetGPUVirtualAddress());
             commandList_->SetGraphicsRootConstantBufferView(4, directionalLightResource_->GetGPUVirtualAddress());
 

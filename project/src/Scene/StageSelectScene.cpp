@@ -7,6 +7,8 @@ void StageSelectScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandLi
 
 void StageSelectScene::Update(SceneManager *sceneManager) {
 
+    ImGui::Text("a");
+
     // スペースキーが押されたらゲームシーンへ
     if(KeyboardInput::GetInstance()->IsKeyPressed(DIK_SPACE)) {
         sceneManager->ChangeScene(new GameScene());

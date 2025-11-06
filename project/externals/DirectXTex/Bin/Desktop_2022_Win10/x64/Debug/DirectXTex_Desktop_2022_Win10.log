@@ -1,7 +1,0 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(524,5): warning MSB8004: Output ディレクトリの末尾がスラッシュではありません。Output ディレクトリが適切に評価されるようにするために、このビルド インスタンスによってスラッシュが追加されます。
-  BC.cpp
-  BC4BC5.cpp
-  BC6HBC7.cpp
-  BCDirectCompute.cpp
-  コードを生成中...
-  DirectXTex_Desktop_2022_Win10.vcxproj -> C:\Users\k024g\OneDrive\デスクトップ\授業\学年\2年後期\自作エンジン\CG2\CG2\MyDreamGame\generated\outputs\Debug\DirectXTex.lib

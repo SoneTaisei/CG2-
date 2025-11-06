@@ -1,5 +1,7 @@
 #include "UtilityFunctions.h"
 #include <map>
+#include <fstream>
+#include <mutex>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	if(ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
@@ -20,7 +22,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 void Log(const std::string &message) {
+	// デバッグ出力（従来の動作）
 	OutputDebugStringA(message.c_str());
+
+	// ログファイルを一度だけ作成して使い回す（スレッドセーフ）
+	static std::once_flag s_logInitFlag;
+	static std::ofstream s_logStream;
+	static std::mutex s_logMutex;
+
+	std::call_once(s_logInitFlag, []() {
+		try {
+			// logs ディレクトリを作成
+			std::filesystem::create_directories("logs");
+
+			// 現在の時刻を秒単位に丸める
+			auto now = std::chrono::system_clock::now();
+			auto nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+
+			// ローカルタイムゾーンに変換してフォーマット（元コードと同じ書式を使用）
+			std::chrono::zoned_time localTime{ std::chrono::current_zone(), nowSeconds };
+			std::string dateString = std::format("{:%Y%d_%H%M%S}", localTime);
+
+			// ファイルパスを作成して open（追記モード）
+			std::string logFilePath = std::string("logs/") + dateString + ".log";
+			s_logStream.open(logFilePath, std::ios::app | std::ios::binary);
+		} catch(...) {
+			// 例外は無視してデバッグ出力のみ行う（ログ失敗してもアプリが止まらないようにする）
+		}
+	});
+
+	// 実際の書き込み
+	std::lock_guard<std::mutex> lock(s_logMutex);
+	if(s_logStream && s_logStream.good()) {
+		s_logStream << message;
+		s_logStream.flush();
+	}
 }
 
 std::wstring ConvertString(const std::string &str) {
@@ -60,20 +96,67 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS *exception) {
 	SYSTEMTIME time;
 	GetLocalTime(&time);
 	wchar_t filePath[MAX_PATH] = { 0 };
-	CreateDirectory(L"./Dumps", nullptr);
-	StringCchPrintfW(filePath, MAX_PATH, L"./Dumps/%04d-%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
-	HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+	// ディレクトリ作成（失敗しても続行）
+	if(!CreateDirectoryW(L"./Dumps", nullptr)) {
+		DWORD err = GetLastError();
+		if(err != ERROR_ALREADY_EXISTS) {
+			Log(std::format("CreateDirectory failed, err:{}\n", err));
+		}
+	}
+
+	// ファイル名（秒単位）
+	StringCchPrintfW(filePath, MAX_PATH, L"./Dumps/%04d-%02d-%02d_%02d%02d%02d.dmp",
+		time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+
+	// ログにパスを出力
+	Log(std::format("ExportDump: target path: {}\n", ConvertString(filePath)));
+
+	// ファイル作成
+	HANDLE dumpFileHandle = CreateFileW(
+		filePath,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_WRITE | FILE_SHARE_READ,
+		nullptr,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		nullptr);
+
+	if(dumpFileHandle == INVALID_HANDLE_VALUE) {
+		DWORD err = GetLastError();
+		Log(std::format("CreateFileW failed, err:{}\n", err));
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
+
 	// processId(exeID)とクラッシュ(例外)の発生したthreadIDを取得
 	DWORD processId = GetCurrentProcessId();
 	DWORD threadId = GetCurrentThreadId();
+
 	// 設定情報を入力
-	MINIDUMP_EXCEPTION_INFORMATION minidumpInformation{ 0 };
+	MINIDUMP_EXCEPTION_INFORMATION minidumpInformation{};
 	minidumpInformation.ThreadId = threadId;
 	minidumpInformation.ExceptionPointers = exception;
 	minidumpInformation.ClientPointers = TRUE;
-	// Dumpを出力。MiniDumNormalは最低限の情報を出力するフラグ
-	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
+
+	// Dumpを出力。結果をログに残す
+	BOOL writeResult = MiniDumpWriteDump(
+		GetCurrentProcess(),
+		processId,
+		dumpFileHandle,
+		MiniDumpNormal,
+		&minidumpInformation,
+		nullptr,
+		nullptr);
+
+	if(!writeResult) {
+		DWORD err = GetLastError();
+		Log(std::format("MiniDumpWriteDump failed, err:{}\n", err));
+	} else {
+		Log(std::format("MiniDumpWriteDump succeeded: {}\n", ConvertString(filePath)));
+	}
+
 	CloseHandle(dumpFileHandle);
+
 	// ほかに関連付けられているSEH例外ハンドラがあれば実行。通常プロセスを終了する。
 	return EXCEPTION_EXECUTE_HANDLER;
 }

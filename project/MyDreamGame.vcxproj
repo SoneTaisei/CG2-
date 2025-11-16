@@ -163,7 +163,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="src\Audio\AudioManager.cpp" />
     <ClCompile Include="src\Input\GamepadInput.cpp" />
     <ClCompile Include="src\Input\KeyboardInput.cpp" />
-    <ClCompile Include="src\Graphics\D3DResourceLeakChacker.cpp" />
     <ClCompile Include="src\Graphics\DebugCamera.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
@@ -177,7 +176,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="src\Core\MyGameApp.cpp" />
     <ClCompile Include="src\GameObject\Object3D.cpp" />
     <ClCompile Include="src\GameObject\ResourceObject.cpp" />
     <ClCompile Include="src\Utility\TransformFunctions.cpp" />
@@ -206,6 +204,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\TimeManager.h" />
     <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />
     <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
     <ClInclude Include="src\Sprite\SpriteCommon.h" />
@@ -218,7 +217,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="src\Input\GamepadInput.h" />
     <ClInclude Include="src\Input\KeyboardInput.h" />
     <ClInclude Include="src\Utility\BlendMode.h" />
-    <ClInclude Include="src\Graphics\D3DResourceLeakChacker.h" />
     <ClInclude Include="src\Graphics\DebugCamera.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
@@ -229,7 +227,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="src\Input\InputManager.h" />
-    <ClInclude Include="src\Core\MyGameApp.h" />
     <ClInclude Include="src\GameObject\Object3D.h" />
     <ClInclude Include="src\GameObject\ResourceObject.h" />
     <ClInclude Include="src\Utility\Structs.h" />

@@ -11,6 +11,7 @@
 #include <format>
 #include <chrono>
 #include "Utility/TransformFunctions.h"
+//#include "Core/TimeManager.h"
 
 // ImGuiの外部リンケージ
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -149,6 +150,9 @@ void WindowsApplication::Initialize() {
     // システムタイマーの分解能を上げる
     timeBeginPeriod(1);
 
+    // TimeManager を初期化
+    //TimeManager::GetInstance().Initialize();
+
 #ifdef _DEBUG
 // リソースリークチェッカーのインスタンスを作成
     leakChecker_ = std::make_unique<D3DResourceLeakChecker>();
@@ -170,6 +174,11 @@ void WindowsApplication::Run() {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         } else {
+
+            // デルタタイムを計算
+            //TimeManager::GetInstance().Update();
+
+
             // --- 更新処理 (Update) ---
             ImGui_ImplDX12_NewFrame();
             ImGui_ImplWin32_NewFrame();

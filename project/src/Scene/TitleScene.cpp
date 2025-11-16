@@ -4,6 +4,7 @@
 #include "../externals/imgui/imgui.h"
 #include"Sprite/Sprite.h"
 #include "Graphics/TextureManager.h"
+#include "Core/TimeManager.h"
 
 void TitleScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {
 	// モデルを作成
@@ -26,6 +27,10 @@ void TitleScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> co
 
 void TitleScene::Update(SceneManager *sceneManager) {
 
+	// デルタタイムを取得
+	//float dt = TimeManager::GetInstance().GetDeltaTime();
+
+	//transform_.translate.x = ++transform_.translate.x * dt;
 	
 
 	// スペースキーが押されたらステージセレクトシーンへ
@@ -42,6 +47,11 @@ void TitleScene::Draw(const Matrix4x4 &viewProjectionMatrix) {
 	//model_->CreateSphere();
 	// 取得したGPUハンドルをDraw関数に渡す
 	model_->Draw(transform_,viewProjectionMatrix, planeGpuHandle);
+	//model_->Draw({
+	//	{1.0f, 1.0f, 0.5f}, // Scale
+	//	{0.0f, 0.0f, 0.0f}, // Rotate
+	//	{1.0f, 0.0f, 0.0f}  // Translate
+	//			 },viewProjectionMatrix, planeGpuHandle);
 
 	//Sprite::PreDraw(commandList_.Get());
 	//Sprite::Draw(150, 50, 100, 100, planeGpuHandle);

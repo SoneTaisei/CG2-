@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <Windows.h>
 #include <string>
+#include <chrono>
 #include "Utility/UtilityFunctions.h"
 
 class DirectXCommon {
@@ -37,6 +38,10 @@ private:
 	void CreateFinalRenderTargets();
 	// パイプラインステートオブジェクト(描画ルール)の作成
 	void CreatePipelines();
+	// FPS固定初期化
+	void InitializeFixFPS();
+	// FPS固定更新
+	void UpdateFixFPS();
 
 private:
 	// ウィンドウハンドル
@@ -75,7 +80,8 @@ private:
 	// 現在のバックバッファインデックス
 	UINT backBufferIndex_ = 0;
 
-
+	// 記録時間(FPS固定用)
+	std::chrono::steady_clock::time_point reference_;
 
 };
 

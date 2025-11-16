@@ -15,6 +15,8 @@
 // ImGuiの外部リンケージ
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+#pragma comment(lib, "winmm.lib")
+
 
 LRESULT CALLBACK WindowsApplication::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     // ImGuiへのメッセージ転送
@@ -144,7 +146,8 @@ void WindowsApplication::Initialize() {
     materialData->uvTransform = TransformFunctions::MakeIdentity4x4();
     materialResource->Unmap(0, nullptr);
 
-    
+    // システムタイマーの分解能を上げる
+    timeBeginPeriod(1);
 }
 
 void WindowsApplication::Run() {

@@ -153,6 +153,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DirectXCommon\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
     <ClCompile Include="src\Sprite\SpriteCommon.cpp" />
     <ClCompile Include="src\Scene\SceneManager.cpp" />
@@ -205,6 +206,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />
     <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
     <ClInclude Include="src\Sprite\SpriteCommon.h" />
     <ClInclude Include="src\Scene\SceneManager.h" />

@@ -8,6 +8,7 @@
 #include "Graphics/DebugCamera.h" 
 #include "Utility/Utilityfunctions.h"
 #include "DirectXCommon/DirectXCommon.h"
+#include "DirectXCommon/D3DResourceLeakChecker.h"
 
 class WindowsApplication {
 public:
@@ -43,5 +44,10 @@ private:
 	const UINT materialBufferSize = {};
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = {};
 	Material *materialData = nullptr;
+
+#ifdef _DEBUG
+// リソースリークチェッカー
+	std::unique_ptr<D3DResourceLeakChecker> leakChecker_;
+#endif
 };
 

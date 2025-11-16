@@ -3,6 +3,7 @@
 #include "Graphics\TextureManager.h"
 #include <format>
 #include <vector>
+#include <thread>
 
 using namespace Microsoft::WRL;
 
@@ -15,6 +16,7 @@ void DirectXCommon::Initialize(HWND hwnd, int32_t windowWidth, int32_t windowHei
 	CreateDxInstance();
 	CreateFinalRenderTargets();
 	CreatePipelines();
+    InitializeFixFPS();
 
 	// フェンスの初期化
 	HRESULT hr = device_->CreateFence(fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
@@ -121,6 +123,8 @@ void DirectXCommon::PostDraw() {
         WaitForSingleObject(fenceEvent_, INFINITE);
     }
 
+    UpdateFixFPS();
+
     // 次のフレームの準備
     hr = commandAllocator_->Reset();
     assert(SUCCEEDED(hr));
@@ -175,13 +179,10 @@ void DirectXCommon::CreateDxInstance() {
 }
 
 void DirectXCommon::CreateFinalRenderTargets() {
-    // (WindowsApplication::CreateFinalRenderTargets の中身を貼り付け)
-    // kWindowWidth_ -> windowWidth_ へ変更
-    // kWindowHeight_ -> windowHeight_ へ変更
     HRESULT hr;
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-    swapChainDesc.Width = windowWidth_; // 変更
-    swapChainDesc.Height = windowHeight_; // 変更
+    swapChainDesc.Width = windowWidth_;
+    swapChainDesc.Height = windowHeight_;
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -208,9 +209,6 @@ void DirectXCommon::CreateFinalRenderTargets() {
 }
 
 void DirectXCommon::CreatePipelines() {
-    // (WindowsApplication::CreatePipelines の中身を貼り付け)
-    // kWindowWidth_ -> windowWidth_ へ変更
-    // kWindowHeight_ -> windowHeight_ へ変更
     HRESULT hr;
 
     Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
@@ -361,8 +359,8 @@ void DirectXCommon::CreatePipelines() {
     device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 
     viewport_ = {};
-    viewport_.Width = (float)windowWidth_; // 変更
-    viewport_.Height = (float)windowHeight_; // 変更
+    viewport_.Width = (float)windowWidth_;
+    viewport_.Height = (float)windowHeight_;
     viewport_.TopLeftX = 0;
     viewport_.TopLeftY = 0;
     viewport_.MinDepth = 0.0f;
@@ -370,7 +368,34 @@ void DirectXCommon::CreatePipelines() {
 
     scissorRect_ = {};
     scissorRect_.left = 0;
-    scissorRect_.right = windowWidth_; // 変更
+    scissorRect_.right = windowWidth_;
     scissorRect_.top = 0;
-    scissorRect_.bottom = windowHeight_; // 変更
+    scissorRect_.bottom = windowHeight_;
+}
+
+void DirectXCommon::InitializeFixFPS() {
+    // 現在の時間を記録する
+    reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXCommon::UpdateFixFPS() {
+    // 1/60秒ぴったりの時間
+    const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+    // 1/60秒よりわずかに短い時間
+    const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+    // 現在時間を取得する
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    // 前回記録からの経過時間を取得する
+    std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+    // 1/60秒経過していない場合
+    if(elapsed < kMinTime) {
+        while(std::chrono::steady_clock::now() - reference_ < kMinTime) {
+            // 1マイクロ秒スリープ
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+        }
+    }
+    // 現在の時間を記録する
+    reference_ = std::chrono::steady_clock::now();
 }

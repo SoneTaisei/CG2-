@@ -34,6 +34,7 @@
     <ClCompile Include="src\Platform\WindowsApplication.cpp" />
     <ClCompile Include="src\Sprite\SpriteCommon.cpp" />
     <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
+    <ClCompile Include="src\DirectXCommon\D3DResourceLeakChecker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Scene\SceneManager.h" />
@@ -68,11 +69,20 @@
     <ClInclude Include="src\Platform\WindowsApplication.h" />
     <ClInclude Include="src\Sprite\SpriteCommon.h" />
     <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
+    <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\Object3d.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Engin">
+      <UniqueIdentifier>{d38e283d-a6dd-4a4d-b96b-2e8e67efd161}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aprication">
+      <UniqueIdentifier>{448cf43c-7645-438d-b0dc-40d10a8a8f31}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

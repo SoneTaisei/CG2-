@@ -148,6 +148,11 @@ void WindowsApplication::Initialize() {
 
     // システムタイマーの分解能を上げる
     timeBeginPeriod(1);
+
+#ifdef _DEBUG
+// リソースリークチェッカーのインスタンスを作成
+    leakChecker_ = std::make_unique<D3DResourceLeakChecker>();
+#endif
 }
 
 void WindowsApplication::Run() {

@@ -92,11 +92,24 @@ void WindowsApplication::Initialize() {
     Model::StaticInitialize(device);
     TextureManager::GetInstance()->Initialize(device);
 
-    std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
-    for(size_t i = 0; i < TextureManager::GetInstance()->GetTextureCount(); ++i) {
-        textureHandles.push_back(TextureManager::GetInstance()->GetGpuHandle(static_cast<uint32_t>(i)));
-    }
-    Sprite::StaticInitialize(device, kWindowWidth_, kWindowHeight_, textureHandles);
+    // ★ 1. SpriteCommon の生成と初期化
+    spriteCommon_ = std::make_unique<SpriteCommon>();
+    spriteCommon_->Initialize(dxCommon_->GetDevice(), kWindowWidth_, kWindowHeight_);
+
+    // ★ 2. SceneManager の生成
+    sceneManager_ = std::make_unique<SceneManager>();
+
+    // ★ 3. SpriteCommon を SceneManager に渡す
+    sceneManager_->SetSpriteCommon(spriteCommon_.get());
+
+    // SceneManager初期化
+    sceneManager_->Initialize(commandList);
+
+    //std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
+    //for(size_t i = 0; i < TextureManager::GetInstance()->GetTextureCount(); ++i) {
+    //    textureHandles.push_back(TextureManager::GetInstance()->GetGpuHandle(static_cast<uint32_t>(i)));
+    //}
+    //Sprite::StaticInitialize(device, kWindowWidth_, kWindowHeight_, textureHandles);
 
     // ViewProjectionリソースの作成
     UINT viewProjectionSize = (sizeof(ViewProjection) + 255) & ~255;
@@ -117,10 +130,6 @@ void WindowsApplication::Initialize() {
     float aspect = float(kWindowWidth_) / float(kWindowHeight_);
     Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f, aspect, 0.1f, 100.0f);
     debugCamera_->Initialize(initViewMatrix, initProjectionMatrix, kWindowWidth_, kWindowHeight_);
-
-     // SceneManagerの生成と初期化
-    sceneManager_ = std::make_unique<SceneManager>();
-    sceneManager_->Initialize(commandList);
 
     // ImGuiの初期化
     IMGUI_CHECKVERSION();
@@ -229,6 +238,11 @@ void WindowsApplication::Finalize() {
     debugCamera_.reset();
 
     sceneManager_.reset();
+
+    if(spriteCommon_) {
+        spriteCommon_->Finalize();
+        spriteCommon_.reset();
+    }
 
     // その他マネージャクラスの解放
     AudioManager::Finalize();

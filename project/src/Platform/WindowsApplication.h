@@ -9,6 +9,7 @@
 #include "Utility/Utilityfunctions.h"
 #include "DirectXCommon/DirectXCommon.h"
 #include "DirectXCommon/D3DResourceLeakChecker.h"
+#include "Sprite/SpriteCommon.h"
 
 class WindowsApplication {
 public:
@@ -30,6 +31,9 @@ private:
 
 	// DirectX関連の処理をまとめたクラス
 	std::unique_ptr<DirectXCommon> dxCommon_;
+
+	// スプライト共通部のメンバ変数
+	std::unique_ptr<SpriteCommon> spriteCommon_;
 
 	// --- DirectX関連以外のメンバ変数 ---
 	std::unique_ptr<SceneManager> sceneManager_;

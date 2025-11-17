@@ -6,6 +6,7 @@
 
 // 前方宣言
 class SceneManager;
+class SpriteCommon;
 
 class IScene {
 public:
@@ -19,4 +20,11 @@ public:
 
     // 描画
     virtual void Draw(const Matrix4x4 &viewProjectionMatrix) = 0;
+
+    // セット用関数
+    void SetSpriteCommon(SpriteCommon *spriteCommon) { spriteCommon_ = spriteCommon; }
+
+protected:
+    // 継承先(TitleSceneなど)で使えるようにする
+    SpriteCommon *spriteCommon_ = nullptr;
 };

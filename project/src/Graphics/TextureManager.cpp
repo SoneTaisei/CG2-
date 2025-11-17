@@ -81,3 +81,11 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGpuHandle(uint32_t textureHandle)
     assert(textureHandle < textures_.size());
     return textures_[textureHandle].srvHandleGPU;
 }
+
+const D3D12_RESOURCE_DESC TextureManager::GetResourceDesc(uint32_t textureHandle) const {
+    // ハンドルが範囲内かチェック
+    assert(textureHandle < textures_.size());
+
+    // リソースの情報を取得して返す
+    return textures_[textureHandle].resource->GetDesc();
+}

@@ -3,6 +3,9 @@
 #include "Input/KeyboardInput.h"
 #include "../externals/imgui/imgui.h"
 
+StageSelectScene::~StageSelectScene() {
+}
+
 void StageSelectScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {}
 
 void StageSelectScene::Update(SceneManager *sceneManager) {

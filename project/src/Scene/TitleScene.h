@@ -3,17 +3,22 @@
 #include <d3d12.h>
 #include "Model/Model.h"
 #include "Utility/Utilityfunctions.h"
+#include <memory>
+#include "Sprite/Sprite.h"
 
 class TitleScene : public IScene {
 public:
+    ~TitleScene() override;
     void Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) override;
     void Update(SceneManager *sceneManager) override;
     void Draw(const Matrix4x4 &viewProjectionMatrix) override;
 
 private:
     // メンバ変数としてモデル、テクスチャ、座標を持つ
-    Model *model_ = nullptr;
     uint32_t textureHandle_ = 0;
     Transform transform_ = {};
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
+
+    std::unique_ptr<Model> model_;
+    std::vector<std::unique_ptr<Sprite>> sprites_;
 };

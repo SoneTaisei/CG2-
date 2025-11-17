@@ -31,6 +31,9 @@ public:
     // テクスチャの総数を取得
     size_t GetTextureCount() const { return textures_.size(); }
 
+    // 指定したハンドルのリソース情報（幅・高さなど）を取得
+    const D3D12_RESOURCE_DESC GetResourceDesc(uint32_t textureHandle) const;
+
 private:
     // コンストラクタ、デストラクタなどをprivateにする（シングルトン）
     TextureManager() = default;

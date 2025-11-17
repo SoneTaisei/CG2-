@@ -1,29 +1,54 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
-#include <d3dcompiler.h>
+#include <vector>
+#include <list>
+#include "Utility/Utilityfunctions.h"
+
+// 前方宣言
+class Sprite;
 
 class SpriteCommon {
 public:
-	void Initialize();
+    // 初期化 (デバイスとウィンドウサイズを受け取る)
+    void Initialize(ID3D12Device *device, int windowWidth, int windowHeight);
+
+    // 終了処理
+    void Finalize();
+
+    // 描画前処理 (共通の設定をコマンドリストに積む)
+    void PreDraw(ID3D12GraphicsCommandList *commandList);
+
+    // ★登録されている全スプライトを描画する
+    void DrawAll();
+
+    // リスト管理用 (Spriteクラスから呼ばれる)
+    void AddSprite(Sprite *sprite);
+    void RemoveSprite(Sprite *sprite);
+
+    // ゲッター
+    ID3D12Device *GetDevice() const { return device_; }
+    ID3D12GraphicsCommandList *GetCommandList() const { return commandList_; }
+    const Matrix4x4 &GetProjectionMatrix() const { return projectionMatrix_; }
+
 private:
-	// ルートシグネチャの作成
-	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-
-	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> spritePipelineState = nullptr;
+    // 共通リソース作成関数
+    void CreateCommonResources();
 
 private:
-	// ルートシグネチャの作成
-	void CreateRootSignature();
-	// グラフィックスパイプラインの生成
-	void CreateGraphicsPipeline();
+    ID3D12Device *device_ = nullptr;
+    ID3D12GraphicsCommandList *commandList_ = nullptr;
+
+    // 共通の頂点・インデックスバッファ
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
+
+    // 射影行列 (画面サイズ依存)
+    Matrix4x4 projectionMatrix_{};
+
+    // ★全スプライトのリスト
+    std::list<Sprite *> sprites_;
 };
 

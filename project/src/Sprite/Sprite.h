@@ -1,58 +1,54 @@
 #pragma once
-
 #include <d3d12.h>
 #include <wrl.h>
-#include <vector>
 #include "Utility/Utilityfunctions.h"
+
+// 前方宣言
+class SpriteCommon;
 
 class Sprite {
 public:
-    // 静的初期化・終了処理
-    static void StaticInitialize(
-        ID3D12Device *device,
-        int windowWidth, int windowHeight,
-        const std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> &textureSrvHandles);
-    static void StaticFinalize();
+    // コンストラクタ・デストラクタ
+    Sprite();
+    ~Sprite();
 
-    // 描画前処理
-    static void PreDraw(ID3D12GraphicsCommandList *commandList);
+    // 初期化 (Commonへのポインタを渡すことで紐付ける)
+    void Initialize(SpriteCommon *spriteCommon, uint32_t textureIndex);
 
-    // 静的描画関数
-    static void Draw(
-        float destX, float destY,         // 描画先の左上座標
-        float width, float height,        // スプライトの幅と高さ
-        D3D12_GPU_DESCRIPTOR_HANDLE textureHandle,           // テクスチャハンドル (インデックス)
-        float scaleX = 1.0f, float scaleY = 1.0f, // 拡縮率
-        float angle = 0.0f,               // 回転角度 (Z軸周り、ラジアン)
-        const Vector4 &color = { 1.0f, 1.0f, 1.0f, 1.0f } // 色
-    );
+    // 更新 (アニメーション等あれば)
+    void Update();
+
+    // 描画 (Commonから呼ばれる)
+    void Draw();
+
+    // --- セッター ---
+    void SetPosition(const Vector2 &position) { transform_.translate = { position.x, position.y, 0.0f }; }
+    void SetRotation(float rotation) { transform_.rotate.z = rotation; }
+    void SetSize(const Vector2 &size) { transform_.scale = { size.x, size.y, 1.0f }; }
+    void SetColor(const Vector4 &color) { materialData_->color = color; }
+
+    // テクスチャ切り抜き設定
+    void SetTextureRect(float x, float y, float w, float h);
+    // 切り抜き解除
+    void ResetTextureRect();
 
 private:
-    // 静的メンバ変数
-    static ID3D12Device *sDevice_;
-    static ID3D12GraphicsCommandList *sCommandList_;
-    static Microsoft::WRL::ComPtr<ID3D12Resource> sVertexResource_;
-    static D3D12_VERTEX_BUFFER_VIEW sVertexBufferView_;
-    static Microsoft::WRL::ComPtr<ID3D12Resource> sIndexResource_;
-    static D3D12_INDEX_BUFFER_VIEW sIndexBufferView_;
-    static Microsoft::WRL::ComPtr<ID3D12Resource> sMaterialResource_;
-    static Microsoft::WRL::ComPtr<ID3D12Resource> sTransformationMatrixResource_;
+    // 借りてくる共通部分
+    SpriteCommon *spriteCommon_ = nullptr;
 
-    // マップ済みポインタ
-    static Material *sMaterialData_;
-    static Matrix4x4 *sTransformationMatrixData_;
+    // 個別のリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+    Material *materialData_ = nullptr;
 
-    // 射影行列
-    static Matrix4x4 sProjectionMatrix_;
+    // 座標変換用
+    Transform transform_{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
 
-    // テクスチャハンドルの配列
-    static std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> sTextureSrvHandles_;
+    // テクスチャ情報
+    uint32_t textureIndex_ = 0;
 
-    // 定数
-    static const int kVertexCount = 4;
-    static const int kIndexCount = 6;
-
-    static int sWindowWidth_;
-    static int sWindowHeight_;
+    // 切り抜き用パラメータ
+    Vector2 texBaseSize_ = { 100.0f, 100.0f }; // 仮初期値
+    Vector2 texPos_ = { 0.0f, 0.0f };
+    Vector2 texSize_ = { 100.0f, 100.0f };
+    bool isCutMode_ = false;
 };
-

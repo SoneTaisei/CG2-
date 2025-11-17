@@ -88,16 +88,21 @@ void WindowsApplication::Initialize() {
     KeyboardInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
     GamepadInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
 
+     // ★ 2. SceneManager の生成
+    sceneManager_ = std::make_unique<SceneManager>();
+
     // SpriteクラスとModelクラスの静的初期化
-    Model::StaticInitialize(device);
+    // ModelCommonの生成と初期化
+    modelCommon_ = std::make_unique<ModelCommon>();
+    modelCommon_->Initialize(device);
+
+    // SceneManagerに渡す
+    sceneManager_->SetModelCommon(modelCommon_.get());
     TextureManager::GetInstance()->Initialize(device);
 
     // ★ 1. SpriteCommon の生成と初期化
     spriteCommon_ = std::make_unique<SpriteCommon>();
     spriteCommon_->Initialize(dxCommon_->GetDevice(), kWindowWidth_, kWindowHeight_);
-
-    // ★ 2. SceneManager の生成
-    sceneManager_ = std::make_unique<SceneManager>();
 
     // ★ 3. SpriteCommon を SceneManager に渡す
     sceneManager_->SetSpriteCommon(spriteCommon_.get());
@@ -214,6 +219,9 @@ void WindowsApplication::Run() {
             commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(3, viewProjectionResource_->GetGPUVirtualAddress());
             commandList->SetGraphicsRootConstantBufferView(4, directionalLightResource_->GetGPUVirtualAddress());
+
+            // ★追加: 描画前にコマンドリストをModelCommonに渡す
+            modelCommon_->PreDraw(commandList);
 
             // (ここにゲームの描画コマンド)
             // --- 描画処理 (Draw) ---

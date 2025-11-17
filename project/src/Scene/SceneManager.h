@@ -7,6 +7,7 @@
 #include "GameScene.h"
 
 class SpriteCommon;
+class ModelCommon;
 
 class SceneManager {
 public:
@@ -22,11 +23,15 @@ public:
     // SpriteCommonをセットする関数
     void SetSpriteCommon(SpriteCommon *spriteCommon) { spriteCommon_ = spriteCommon; }
 
+    void SetModelCommon(ModelCommon *modelCommon) { modelCommon_ = modelCommon; }
+
     // SpriteCommonを取得する関数
     SpriteCommon *GetSpriteCommon() const { return spriteCommon_; }
+    ModelCommon *GetModelCommon()const { return modelCommon_; }
 
 private:
     std::unique_ptr<IScene> currentScene_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
     SpriteCommon *spriteCommon_ = nullptr;
+    ModelCommon *modelCommon_ = nullptr;
 };

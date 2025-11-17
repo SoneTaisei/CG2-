@@ -1,74 +1,61 @@
 #pragma once
-
-#include <d3d12.h>
-#include <wrl.h>
+#include "ModelCommon.h" // Commonをインクルード
+#include "Utility/Utilityfunctions.h"
 #include <string>
 #include <vector>
-
-// 以下のヘッダーファイルは、ご自身のプロジェクト構成に合わせてインクルードしてください。
-#include "Utility/Utilityfunctions.h" // Transform, Matrix4x4, VertexData, TransformMatrix などを含むヘッダー
-#include "Model/Model.h"      // LoadObjFileが返すModelData構造体を含むヘッダー
+#include <wrl.h>
 
 class Model {
 public:
-    /// <summary>
-    /// 静的初期化処理。D3D12デバイスを保持します。
-    /// </summary>
-    /// <param name="device">D3D12デバイス</param>
-    static void StaticInitialize(ID3D12Device *device);
+    // コンストラクタ・デストラクタ
+    Model() = default;
+    ~Model();
 
-    /// <summary>
-    /// 描画前処理。コマンドリストを保持します。
-    /// </summary>
-    /// <param name="commandList">コマンドリスト</param>
-    static void PreDraw(ID3D12GraphicsCommandList *commandList);
+    // ★初期化関数（OBJファイル読み込み）
+    // 従来の CreateFromObj の代わり
+    void Initialize(ModelCommon *modelCommon, const std::string &directoryPath, const std::string &filename);
 
-    /// <summary>
-    /// OBJファイルからモデルを生成します。
-    /// </summary>
-    /// <param name="directoryPath">ファイルのあるディレクトリパス</param>
-    /// <param name="filename">ファイル名</param>
-    /// <returns>生成されたモデルのインスタンス</returns>
-    static Model *CreateFromObj(const std::string &directoryPath, const std::string &filename);
+    // ★初期化関数（球体生成）
+    // 従来の CreateSphere の代わり
+    void InitializeSphere(ModelCommon *modelCommon);
 
-    /// <summary>
-    /// 球体モデルを生成します。
-    /// </summary>
-    /// <returns>生成された球体モデルのインスタンス</returns>
-    static Model *CreateSphere();
+    // 描画
+    void Draw(const Matrix4x4 &viewProjectionMatrix);
+    // ゲッター
+    ModelData GetModelData() const { return modelData_; }
 
-    /// <summary>
-    /// 描画処理
-    /// </summary>
-    /// <param name="transform">ワールド変換情報</param>
-    /// <param name="viewProjectionMatrix">ビュープロジェクション行列</param>
-    /// <param name="textureHandle">テクスチャのSRVハンドル</param>
-    void Draw(const Transform &transform, const Matrix4x4 &viewProjectionMatrix, D3D12_GPU_DESCRIPTOR_HANDLE textureHandle);
 
-    /// <summary>
-    /// モデルの情報を取得します（テクスチャファイルパスなどに使用）。
-    /// </summary>
-    /// <returns>モデルデータ</returns>
-    const ModelData &GetModelData() const { return modelData_; }
+    // --- セッター ---
+    void SetPosition(const Vector3 &position) { transform_.translate = position; }
+    void SetRotation(const Vector3 &rotation) { transform_.rotate = rotation; }
+    void SetScale(const Vector3 &scale) { transform_.scale = scale; }
+    // テクスチャを後から変えたい場合用
+    void SetTextureHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle) { textureHandle_ = handle; }
 
+    // --- ゲッター ---
+    const Vector3 &GetPosition() const { return transform_.translate; }
+    const Vector3 &GetRotation() const { return transform_.rotate; }
+    const Vector3 &GetScale() const { return transform_.scale; }
+    const Transform &GetTransform() const { return transform_; }
 
 private:
-    // プライベートコンストラクタで、ファクトリ関数からの生成を強制
-    Model() = default;
-
-    // 頂点バッファ・インデックスバッファの作成
+    // バッファ生成（内部で使うヘルパー関数）
     void CreateBuffers();
 
 private:
-    // --- 静的メンバ変数 ---
-    static ID3D12Device *sDevice_;
-    static ID3D12GraphicsCommandList *sCommandList_;
+    // ModelCommonへのポインタを持つ（ここからDeviceやCommandListをもらう）
+    ModelCommon *modelCommon_ = nullptr;
 
-    // --- メンバ変数 ---
+    // 自分の座標情報
+    Transform transform_ = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+
+    // 自分のテクスチャ
+    D3D12_GPU_DESCRIPTOR_HANDLE textureHandle_{};
+
+    // 個別のデータ
+    ModelData modelData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
     Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
     D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
-
-    ModelData modelData_; // 頂点、インデックス、マテリアル情報などを保持
 };

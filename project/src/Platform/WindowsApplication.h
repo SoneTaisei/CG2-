@@ -35,6 +35,9 @@ private:
 	// スプライト共通部のメンバ変数
 	std::unique_ptr<SpriteCommon> spriteCommon_;
 
+	// モデル共通部のメンバ変数
+	std::unique_ptr<ModelCommon> modelCommon_;
+
 	// --- DirectX関連以外のメンバ変数 ---
 	std::unique_ptr<SceneManager> sceneManager_;
 

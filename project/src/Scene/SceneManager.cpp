@@ -8,7 +8,12 @@ SceneManager::~SceneManager() {}
 void SceneManager::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {
     // 最初のシーンをタイトルに設定
     currentScene_ = std::make_unique<TitleScene>();
-    currentScene_->SetSpriteCommon(spriteCommon_);
+    if(spriteCommon_) {
+        currentScene_->SetSpriteCommon(spriteCommon_);
+    }
+    if(modelCommon_) {
+        currentScene_->SetModelCommon(modelCommon_);
+    }
     currentScene_->Initialize(commandList);
     commandList_ = commandList;
 }
@@ -31,5 +36,6 @@ void SceneManager::ChangeScene(IScene *newScene) {
     // 現在のシーンを破棄し、新しいシーンを設定
     currentScene_.reset(newScene);
     currentScene_->SetSpriteCommon(spriteCommon_);
+    currentScene_->SetModelCommon(modelCommon_);
     currentScene_->Initialize(commandList_);
 }

@@ -2,8 +2,8 @@
 #include "SceneManager.h" // Updateで使うのでインクルード
 #include "Input/KeyboardInput.h" // キー入力取得のため
 #include "../externals/imgui/imgui.h"
-#include "Sprite/Sprite.h"
 #include "Sprite/SpriteCommon.h"
+#include "Model/ModelCommon.h"
 #include "Graphics/TextureManager.h"
 #include "Core/TimeManager.h"
 #include "StageSelectScene.h"
@@ -14,13 +14,23 @@ TitleScene::~TitleScene() {
 void TitleScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList) {
 	// モデルを作成
 	commandList_ = commandList;
-	model_.reset(Model::CreateFromObj("resources/plane", "plane.obj"));
 
-	ModelData planeDataForTexture = model_->GetModelData();
-	textureHandle_ = TextureManager::GetInstance()->Load(planeDataForTexture.material.textureFilePath, commandList.Get());
+	// 1. 画像をロードしてハンドルを取得 (TextureManagerに任せる)
+	uint32_t uvCheckerIndex = TextureManager::GetInstance()->Load("resources/uvChecker.png", commandList_.Get());
+	D3D12_GPU_DESCRIPTOR_HANDLE textureHandle = TextureManager::GetInstance()->GetGpuHandle(uvCheckerIndex);
+
+	std::unique_ptr<Model> playerModel = std::make_unique<Model>();
+	playerModel->Initialize(modelCommon_, "resources/plane", "plane.obj");
+	playerModel->SetTextureHandle(textureHandle);
+	models_.push_back(std::move(playerModel));
+
+	std::unique_ptr<Model> enemyModel = std::make_unique<Model>();
+	enemyModel->Initialize(modelCommon_, "resources/multiMesh", "multiMesh.obj");
+	enemyModel->SetTextureHandle(textureHandle);
+	models_.push_back(std::move(enemyModel));
 
 	// テクスチャをロード
-	//textureHandle_ = TextureManager::GetInstance()->Load("resources/uvChecker.png",commandList_.Get());
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/uvChecker.png", commandList_.Get());
 
 	// 2. プレイヤー用スプライトを作る
 	std::unique_ptr<Sprite> playerSprite = std::make_unique<Sprite>();
@@ -38,6 +48,12 @@ void TitleScene::Initialize(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> co
 	enemySprite->SetPosition({ 500.0f, 100.0f }); // 右の方
 	enemySprite->SetSize({ 500.0f, 100.0f });
 	sprites_.push_back(std::move(enemySprite));
+
+	transform_ = {
+		{1.0f,1.0f,1.0f,},
+		{0.0f,0.0f,0.0f,},
+		{0.0f,0.0f,0.0f,}
+	};
 }
 
 void TitleScene::Update(SceneManager *sceneManager) {
@@ -55,12 +71,11 @@ void TitleScene::Update(SceneManager *sceneManager) {
 }
 
 void TitleScene::Draw(const Matrix4x4 &viewProjectionMatrix) {
-	Model::PreDraw(commandList_.Get());
 
 	// まず、TextureManagerを使って整理番号(uvCheckerHandle)からGPUハンドルを取得する
 	D3D12_GPU_DESCRIPTOR_HANDLE planeGpuHandle = TextureManager::GetInstance()->GetGpuHandle(textureHandle_);
 	// そのまま呼べる
-	model_->Draw(transform_, viewProjectionMatrix, planeGpuHandle);
+	modelCommon_->DrawAll(viewProjectionMatrix);
 
 	if(spriteCommon_) {
 		spriteCommon_->PreDraw(commandList_.Get());

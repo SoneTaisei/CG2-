@@ -2,9 +2,9 @@
 #include "IScene.h"
 #include <d3d12.h>
 #include "Model/Model.h"
+#include "Sprite/Sprite.h"
 #include "Utility/Utilityfunctions.h"
 #include <memory>
-#include "Sprite/Sprite.h"
 
 class TitleScene : public IScene {
 public:
@@ -19,6 +19,6 @@ private:
     Transform transform_ = {};
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
 
-    std::unique_ptr<Model> model_;
+    std::vector<std::unique_ptr<Model>> models_;
     std::vector<std::unique_ptr<Sprite>> sprites_;
 };

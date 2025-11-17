@@ -7,6 +7,7 @@
 // 前方宣言
 class SceneManager;
 class SpriteCommon;
+class ModelCommon;
 
 class IScene {
 public:
@@ -24,7 +25,10 @@ public:
     // セット用関数
     void SetSpriteCommon(SpriteCommon *spriteCommon) { spriteCommon_ = spriteCommon; }
 
+    virtual void SetModelCommon(ModelCommon *modelCommon) { modelCommon_ = modelCommon; }
+
 protected:
     // 継承先(TitleSceneなど)で使えるようにする
     SpriteCommon *spriteCommon_ = nullptr;
+    ModelCommon *modelCommon_ = nullptr;
 };

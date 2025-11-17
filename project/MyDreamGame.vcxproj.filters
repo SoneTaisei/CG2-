@@ -33,6 +33,7 @@
     <ClCompile Include="src\Sprite\SpriteCommon.cpp" />
     <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
     <ClCompile Include="src\DirectXCommon\D3DResourceLeakChecker.cpp" />
+    <ClCompile Include="src\Model\ModelCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Scene\SceneManager.h" />
@@ -67,6 +68,7 @@
     <ClInclude Include="src\DirectXCommon\DirectXCommon.h" />
     <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />
     <ClInclude Include="src\Core\TimeManager.h" />
+    <ClInclude Include="src\Model\ModelCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\Object3d.hlsli" />

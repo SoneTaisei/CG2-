@@ -49,9 +49,9 @@ void Log(const std::string &message) {
 		} catch(...) {
 			// 例外は無視してデバッグ出力のみ行う（ログ失敗してもアプリが止まらないようにする）
 		}
-	});
+				   });
 
-	// 実際の書き込み
+				   // 実際の書き込み
 	std::lock_guard<std::mutex> lock(s_logMutex);
 	if(s_logStream && s_logStream.good()) {
 		s_logStream << message;
@@ -107,9 +107,9 @@ LONG WINAPI ExportDump(EXCEPTION_POINTERS *exception) {
 
 	// ファイル名（秒単位）
 	StringCchPrintfW(filePath, MAX_PATH, L"./Dumps/%04d-%02d-%02d_%02d%02d%02d.dmp",
-		time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+					 time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
 
-	// ログにパスを出力
+				 // ログにパスを出力
 	Log(std::format("ExportDump: target path: {}\n", ConvertString(filePath)));
 
 	// ファイル作成
@@ -211,19 +211,19 @@ IDxcBlob *CompileShader(
 	);
 	// コンパイラエラーではなくdxcが起動できないなどの致命的なエラー
 	assert(SUCCEEDED(hr));
-
-	/*********************************************************
+/*********************************************************
 	*3.警告・エラーが出ていないか確認
 	*********************************************************/
 
 	IDxcBlobUtf8 *shaderError = nullptr;
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+
+	// shaderErrorが作られていて、かつ中身の文字列の長さが0ではない場合だけエラーとみなす
 	if(shaderError != nullptr && shaderError->GetStringLength() != 0) {
 		Log(shaderError->GetStringPointer());
-		//警告・エラー絶対ダメ
+		// 警告・エラー絶対ダメ
 		assert(false);
 	}
-
 	/*********************************************************
 	*4.Compile結果を受け取って返す
 	*********************************************************/

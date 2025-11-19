@@ -71,9 +71,6 @@
     <ClInclude Include="src\Model\ModelCommon.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\Object3d.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>

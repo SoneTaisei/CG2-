@@ -7,16 +7,7 @@ ConstantBuffer<Material> gMaterial : register(b0);
 
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
-//cbuffer ViewProjection : register(b3) {
-//    matrix viewProjectionMatrix; // 64バイト
-//    float3 cameraPosition; // 12バイト
-//    float padding; // 4バイト → 合計80バイト
-//};
-
-//ConstantBuffer<ViewProjection> gViewProjection : register(b1);
-
 struct PixelShaderOutput {
-    // ピクセルシェーダーを結合して出力する
     float4 color : SV_TARGET0;
 };
 
@@ -28,20 +19,13 @@ cbuffer TransformCB : register(b4) {
     TransformationMatrix transform;
 };
 
-//cbuffer LightCB : register(b3) {
-//    DirectionalLight light;
-//};
-
-//SamplerState smp : register(s0);
-
 float4 main(VertexShaderOutput input) : SV_TARGET {
     float3 normal = normalize(input.normal);
     float3 lightDir = normalize(-gDirectionalLight.direction);
 
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-    
-    // 例えば、アルファ値が0.1未満のピクセルは描画しない
+   
     if (textureColor.a < 0.5f) {
         discard;
     }
@@ -50,17 +34,15 @@ float4 main(VertexShaderOutput input) : SV_TARGET {
 
     float NdotL = dot(normal, lightDir);
 
-    // lightingType の値に応じてライティングを切り替える
-    if (gMaterial.lightingType == 2) { // 2: Half Lambert
+    if (gMaterial.lightingType == 2) { 
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
         color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         color.a = gMaterial.color.a * textureColor.a;
-    } else if (gMaterial.lightingType == 1) { // 1: Lambert
-        // saturateは値を0.0f-1.0fの範囲にクランプする関数
+    } else if (gMaterial.lightingType == 1) { 
         float cos = saturate(NdotL);
         color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         color.a = gMaterial.color.a * textureColor.a;
-    } else { // 0: Lighting なし
+    } else { 
         color = gMaterial.color * textureColor;
     }
 

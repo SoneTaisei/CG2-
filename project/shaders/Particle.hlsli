@@ -23,14 +23,14 @@ struct TransformationMatrix {
 };
 
 struct DirectionalLight {
-    float4 color;
-    float3 direction; 
-    float intensity; 
+    float4 color; //!< ライトの色
+    float3 direction; //!< ライトの向き
+    float intensity; //!< 光度
 };
 
 struct ViewProjection {
-    matrix viewProjectionMatrix;
-    float3 cameraPosition; 
-    float padding; 
+    matrix viewProjectionMatrix; // ビュー・プロジェクション行列
+    float3 cameraPosition; // カメラの位置
+    float padding; // パディング（16バイト単位のため）
 };
 

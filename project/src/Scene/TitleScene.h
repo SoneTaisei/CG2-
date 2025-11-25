@@ -21,4 +21,5 @@ private:
 
     std::vector<std::unique_ptr<Model>> models_;
     std::vector<std::unique_ptr<Sprite>> sprites_;
+
 };

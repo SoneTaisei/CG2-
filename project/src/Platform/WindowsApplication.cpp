@@ -11,7 +11,6 @@
 #include <format>
 #include <chrono>
 #include "Utility/TransformFunctions.h"
-//#include "Core/TimeManager.h"
 
 // ImGuiの外部リンケージ
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -20,248 +19,257 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 
 LRESULT CALLBACK WindowsApplication::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    // ImGuiへのメッセージ転送
-    if(ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-        return true;
-    }
+	// ImGuiへのメッセージ転送
+	if(ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+		return true;
+	}
 
-    // メッセージに応じてゲーム固有の処理を行う
-    switch(msg) {
-        // ウィンドウが破棄された
-    case WM_DESTROY:
-        // OSに対して、アプリの終了を伝える
-        PostQuitMessage(0);
-        return 0;
-    }
+	// メッセージに応じてゲーム固有の処理を行う
+	switch(msg) {
+		// ウィンドウが破棄された
+	case WM_DESTROY:
+		// OSに対して、アプリの終了を伝える
+		PostQuitMessage(0);
+		return 0;
+	}
 
-    // 標準のメッセージ処理を行う
-    return DefWindowProc(hwnd, msg, wparam, lparam);
+	// 標準のメッセージ処理を行う
+	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 void WindowsApplication::Initialize() {
 
-    
+	// COMの初期化
+	CoInitializeEx(0, COINIT_MULTITHREADED);
 
-    // COMの初期化
-    CoInitializeEx(0, COINIT_MULTITHREADED);
+	/*********************************************************
+	*WindowsAPIの初期化
+	*********************************************************/
+	wc_.lpfnWndProc = WindowProc;
+	wc_.lpszClassName = L"MyDreamGame";
+	wc_.hInstance = GetModuleHandle(nullptr);
+	wc_.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	RegisterClass(&wc_);
 
-    /*********************************************************
-    *WindowsAPIの初期化
-    *********************************************************/
-    wc_.lpfnWndProc = WindowProc;
-    wc_.lpszClassName = L"MyDreamGame";
-    wc_.hInstance = GetModuleHandle(nullptr);
-    wc_.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    RegisterClass(&wc_);
+	RECT wrc = { 0, 0, kWindowWidth_, kWindowHeight_ };
+	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-    RECT wrc = { 0, 0, kWindowWidth_, kWindowHeight_ };
-    AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+	hwnd_ = CreateWindow(
+		wc_.lpszClassName,
+		L"MyDreamGame",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		wrc.right - wrc.left,
+		wrc.bottom - wrc.top,
+		nullptr,
+		nullptr,
+		wc_.hInstance,
+		nullptr);
 
-    hwnd_ = CreateWindow(
-        wc_.lpszClassName,
-        L"MyDreamGame",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        wrc.right - wrc.left,
-        wrc.bottom - wrc.top,
-        nullptr,
-        nullptr,
-        wc_.hInstance,
-        nullptr);
-
-    ShowWindow(hwnd_, SW_SHOW);
+	ShowWindow(hwnd_, SW_SHOW);
 
 
-    /*********************************************************
-    *DirectX初期化処理
-    *********************************************************/
-    // DirectXCommonクラスのインスタンスを作成し、初期化
-    dxCommon_ = std::make_unique<DirectXCommon>();
-    dxCommon_->Initialize(hwnd_, kWindowWidth_, kWindowHeight_);
+	/*********************************************************
+	*DirectX初期化処理
+	*********************************************************/
+	// DirectXCommonクラスのインスタンスを作成し、初期化
+	dxCommon_ = std::make_unique<DirectXCommon>();
+	dxCommon_->Initialize(hwnd_, kWindowWidth_, kWindowHeight_);
 
-    // dxCommon_から必要なポインタを取得
-    ID3D12Device *device = dxCommon_->GetDevice();
-    ID3D12GraphicsCommandList *commandList = dxCommon_->GetCommandList();
+	// dxCommon_から必要なポインタを取得
+	ID3D12Device *device = dxCommon_->GetDevice();
+	ID3D12GraphicsCommandList *commandList = dxCommon_->GetCommandList();
 
-    // キーボードとコントローラーの初期化
-    KeyboardInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
-    GamepadInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
+	// キーボードとコントローラーの初期化
+	KeyboardInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
+	GamepadInput::GetInstance()->Initialize(wc_.hInstance, hwnd_);
 
-     // ★ 2. SceneManager の生成
-    sceneManager_ = std::make_unique<SceneManager>();
+	// SceneManager の生成
+	sceneManager_ = std::make_unique<SceneManager>();
 
-    // SpriteクラスとModelクラスの静的初期化
-    // ModelCommonの生成と初期化
-    modelCommon_ = std::make_unique<ModelCommon>();
-    modelCommon_->Initialize(device);
+	// ModelCommonの生成と初期化
+	modelCommon_ = std::make_unique<ModelCommon>();
+	modelCommon_->Initialize(device);
 
-    // SceneManagerに渡す
-    sceneManager_->SetModelCommon(modelCommon_.get());
-    TextureManager::GetInstance()->Initialize(device);
+	// SceneManagerに渡す
+	sceneManager_->SetModelCommon(modelCommon_.get());
+	TextureManager::GetInstance()->Initialize(device);
 
-    // ★ 1. SpriteCommon の生成と初期化
-    spriteCommon_ = std::make_unique<SpriteCommon>();
-    spriteCommon_->Initialize(dxCommon_->GetDevice(), kWindowWidth_, kWindowHeight_);
+	// SpriteCommon の生成と初期化
+	spriteCommon_ = std::make_unique<SpriteCommon>();
+	spriteCommon_->Initialize(dxCommon_->GetDevice(), kWindowWidth_, kWindowHeight_);
 
-    // ★ 3. SpriteCommon を SceneManager に渡す
-    sceneManager_->SetSpriteCommon(spriteCommon_.get());
+	// SpriteCommon を SceneManager に渡す
+	sceneManager_->SetSpriteCommon(spriteCommon_.get());
 
-    // SceneManager初期化
-    sceneManager_->Initialize(commandList);
+	// SceneManager初期化
+	sceneManager_->Initialize(commandList);
 
-    //std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureHandles;
-    //for(size_t i = 0; i < TextureManager::GetInstance()->GetTextureCount(); ++i) {
-    //    textureHandles.push_back(TextureManager::GetInstance()->GetGpuHandle(static_cast<uint32_t>(i)));
-    //}
-    //Sprite::StaticInitialize(device, kWindowWidth_, kWindowHeight_, textureHandles);
+	// ParticleCommon の生成と初期化
+	particleCommon_ = std::make_unique<ParticleCommon>();
+	particleCommon_->Initialize(device);
 
-    // ViewProjectionリソースの作成
-    UINT viewProjectionSize = (sizeof(ViewProjection) + 255) & ~255;
-    viewProjectionResource_ = CreateBufferResource(device, viewProjectionSize);
-    viewProjectionResource_->Map(0, nullptr, reinterpret_cast<void **>(&viewProjectionData_));
+	// Particle (インスタンス) の生成と初期化
+	particle_ = std::make_unique<Particle>();
+	// モデルやテクスチャのロード、初期設定
+	// index 99 は仮のSRVインデックス、10はパーティクル数
+	particle_->Initialize(commandList,particleCommon_.get(), 10, "./resources/uvChecker.png", 99);
 
-    const UINT directionalLightBufferSize = (sizeof(DirectionalLight) + 255) & ~255u;
-    directionalLightResource_ = CreateBufferResource(device, directionalLightBufferSize);
-    directionalLightResource_->Map(0, nullptr, reinterpret_cast<void **>(&directionalLightData_));
-    // 初期値を設定
-    directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
-    directionalLightData_->intensity = 1.0f;
 
-    // デバッグカメラの初期化
-    debugCamera_ = std::make_unique<DebugCamera>();
-    Matrix4x4 initViewMatrix = TransformFunctions::MakeIdentity4x4();
-    float aspect = float(kWindowWidth_) / float(kWindowHeight_);
-    Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f, aspect, 0.1f, 100.0f);
-    debugCamera_->Initialize(initViewMatrix, initProjectionMatrix, kWindowWidth_, kWindowHeight_);
+	// ViewProjectionリソースの作成
+	UINT viewProjectionSize = (sizeof(ViewProjection) + 255) & ~255;
+	viewProjectionResource_ = CreateBufferResource(device, viewProjectionSize);
+	viewProjectionResource_->Map(0, nullptr, reinterpret_cast<void **>(&viewProjectionData_));
 
-    // ImGuiの初期化
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(hwnd_);
-    ImGui_ImplDX12_Init(device, // device_.Get() から変更
-                        dxCommon_->GetSwapChainDesc().BufferCount, // swapChainDesc_.BufferCount から変更
-                        dxCommon_->GetRtvDesc().Format, // rtvDesc_.Format から変更
-                        TextureManager::GetInstance()->GetSrvDescriptorHeap(),
-                        TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-                        TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
-    );
+	// DirectionalLightリソースの作成
+	const UINT directionalLightBufferSize = (sizeof(DirectionalLight) + 255) & ~255u;
+	directionalLightResource_ = CreateBufferResource(device, directionalLightBufferSize);
+	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void **>(&directionalLightData_));
+	// 初期値を設定
+	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData_->intensity = 1.0f;
 
-    // 音声の初期化
-    AudioManager::Initialize();
+	// デバッグカメラの初期化
+	debugCamera_ = std::make_unique<DebugCamera>();
+	Matrix4x4 initViewMatrix = TransformFunctions::MakeIdentity4x4();
+	float aspect = float(kWindowWidth_) / float(kWindowHeight_);
+	Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f, aspect, 0.1f, 100.0f);
+	debugCamera_->Initialize(initViewMatrix, initProjectionMatrix, kWindowWidth_, kWindowHeight_);
 
-    const UINT materialBufferSize = (sizeof(Material) + 255) & ~255u;
-    materialResource = CreateBufferResource(device, materialBufferSize);
-    materialData = nullptr;
-    materialResource->Map(0, nullptr, reinterpret_cast<void **>(&materialData));
-    materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    materialData->lightingType = 0;
-    materialData->uvTransform = TransformFunctions::MakeIdentity4x4();
-    materialResource->Unmap(0, nullptr);
+	// ImGuiの初期化
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd_);
+	ImGui_ImplDX12_Init(device,
+						dxCommon_->GetSwapChainDesc().BufferCount,
+						dxCommon_->GetRtvDesc().Format,
+						TextureManager::GetInstance()->GetSrvDescriptorHeap(),
+						TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+						TextureManager::GetInstance()->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+	);
 
-    // システムタイマーの分解能を上げる
-    timeBeginPeriod(1);
+	// 音声の初期化
+	AudioManager::Initialize();
 
-    // TimeManager を初期化
-    //TimeManager::GetInstance().Initialize();
+	// システムタイマーの分解能を上げる
+	timeBeginPeriod(1);
+
+	// TimeManager を初期化
+	//TimeManager::GetInstance().Initialize();
 
 #ifdef _DEBUG
 // リソースリークチェッカーのインスタンスを作成
-    leakChecker_ = std::make_unique<D3DResourceLeakChecker>();
+	leakChecker_ = std::make_unique<D3DResourceLeakChecker>();
 #endif
 }
 
 void WindowsApplication::Run() {
-    // --- ここに main.cpp の while ループ前の初期化コードを移動 ---
-    // (例：モデルのロード、スプライトの初期化など)
 
-    // (このサンプルでは、main.cppの主要な部分を移植することに焦点を当てます)
+	MSG msg{};
+	// ウィンドウのxボタンが押されるまでループ
+	while(msg.message != WM_QUIT) {
+		// Windowにメッセージが来てたら最優先で処理させる
+		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		} else {
 
-
-    MSG msg{};
-    // ウィンドウのxボタンが押されるまでループ
-    while(msg.message != WM_QUIT) {
-        // Windowにメッセージが来てたら最優先で処理させる
-        if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else {
-
-            // デルタタイムを計算
-            //TimeManager::GetInstance().Update();
+			// デルタタイムを計算
+			//TimeManager::GetInstance().Update();
 
 
-            // --- 更新処理 (Update) ---
-            ImGui_ImplDX12_NewFrame();
-            ImGui_ImplWin32_NewFrame();
-            ImGui::NewFrame();
+			// --- 更新処理 (Update) ---
+			ImGui_ImplDX12_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
 
-            KeyboardInput::GetInstance()->Update();
+			KeyboardInput::GetInstance()->Update();
 
-            // カメラの更新
-            debugCamera_->Update();
-            // ViewProjectionを更新
-            Matrix4x4 viewMatrix = debugCamera_->GetViewMatrix();
-            Matrix4x4 projectionMatrix = debugCamera_->GetProjectionMatrix();
-            viewProjectionData_->viewProjectionMatrix = TransformFunctions::Multiply(viewMatrix, projectionMatrix);
-            viewProjectionData_->cameraPosition = debugCamera_->GetTranslation();
+			// カメラの更新
+			debugCamera_->Update();
+			// ViewProjectionを更新
+			Matrix4x4 viewMatrix = debugCamera_->GetViewMatrix();
+			Matrix4x4 projectionMatrix = debugCamera_->GetProjectionMatrix();
+			viewProjectionData_->viewProjectionMatrix = TransformFunctions::Multiply(viewMatrix, projectionMatrix);
+			viewProjectionData_->cameraPosition = debugCamera_->GetTranslation();
 
-            sceneManager_->Update();
+			sceneManager_->Update();
 
-            // --- 描画処理 (Draw) ---
-            dxCommon_->PreDraw();
-            
-            ID3D12GraphicsCommandList *commandList = dxCommon_->GetCommandList();
+			// パーティクルの更新
+			particle_->Update(viewProjectionData_->viewProjectionMatrix);
 
-             // 定数バッファの設定 (これはゲーム固有の描画処理)
-            commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-            commandList->SetGraphicsRootConstantBufferView(3, viewProjectionResource_->GetGPUVirtualAddress());
-            commandList->SetGraphicsRootConstantBufferView(4, directionalLightResource_->GetGPUVirtualAddress());
 
-            // ★追加: 描画前にコマンドリストをModelCommonに渡す
-            modelCommon_->PreDraw(commandList);
+			// --- 描画処理 (Draw) ---
+			dxCommon_->PreDraw();
 
-            // (ここにゲームの描画コマンド)
-            // --- 描画処理 (Draw) ---
-            sceneManager_->Draw(viewProjectionData_->viewProjectionMatrix);
+			ID3D12GraphicsCommandList *commandList = dxCommon_->GetCommandList();
 
-            // ImGuiの描画
-            ImGui::Render();
-            ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList); // commandList_.Get() から変更
+			// 定数バッファの設定 (ViewProjection, Lightなど共通のもの)
+			// ※RootSignatureの定義順に依存しますが、ParticleCommon内で再設定しても良いし、
+			//   ここで全体設定として入れておくのもありです。
+			//   ただしParticleCommon::PreDrawでRootSignatureが変わるとリセットされるため、
+			//   Particleを描画する直前にセットするのが最も安全です。
 
-            // 描画後処理
-            dxCommon_->PostDraw();
-        }
-    }
+			// ModelCommonの描画前準備
+			modelCommon_->PreDraw(commandList);
+
+			// SceneManagerによる描画
+			sceneManager_->Draw(viewProjectionData_->viewProjectionMatrix);
+
+			// パーティクルの描画
+			// 1. 共通設定 (RootSignature, PSO, Mesh, DescriptorHeap)
+			particleCommon_->PreDraw(commandList);
+
+			// 2. 共通パラメータ (ViewProjection, Light) をセット
+			// ※ ParticleCommon::CreateRootSignature の定義順序に合わせる
+			// [3] DirectionalLight (CBV b1)
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+			// 3. 個別パーティクルの描画
+			particle_->Draw();
+
+
+			// ImGuiの描画
+			ImGui::Render();
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+
+			// 描画後処理
+			dxCommon_->PostDraw();
+		}
+	}
 }
 
 void WindowsApplication::Finalize() {
-    // ImGui解放
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+	// ImGui解放
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
-    debugCamera_.reset();
+	debugCamera_.reset();
+	sceneManager_.reset();
 
-    sceneManager_.reset();
+	if(spriteCommon_) {
+		spriteCommon_->Finalize();
+		spriteCommon_.reset();
+	}
 
-    if(spriteCommon_) {
-        spriteCommon_->Finalize();
-        spriteCommon_.reset();
-    }
+	// パーティクルの解放 (unique_ptrなので自動解放されるが明示的にも書ける)
+	particle_.reset();
+	particleCommon_.reset();
 
-    // その他マネージャクラスの解放
-    AudioManager::Finalize();
-    TextureManager::GetInstance()->Finalize();
+	// その他マネージャクラスの解放
+	AudioManager::Finalize();
+	TextureManager::GetInstance()->Finalize();
 
-    // DirectXCommonの終了処理
-    if(dxCommon_) {
-        dxCommon_->Finalize();
-        dxCommon_.reset();
-    }
+	// DirectXCommonの終了処理
+	if(dxCommon_) {
+		dxCommon_->Finalize();
+		dxCommon_.reset();
+	}
 
-    // COMの終了処理
-    CoUninitialize();
+	// COMの終了処理
+	CoUninitialize();
 }

@@ -5,7 +5,6 @@
 #include "Sprite/Sprite.h"
 #include "Utility/Utilityfunctions.h"
 #include <memory>
-#include "Effect/ParticleSystem.h"
 
 class TitleScene : public IScene {
 public:

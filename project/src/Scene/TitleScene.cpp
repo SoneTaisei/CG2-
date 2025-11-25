@@ -7,7 +7,6 @@
 #include "Graphics/TextureManager.h"
 #include "Core/TimeManager.h"
 #include "StageSelectScene.h"
-#include "Effect/ParticleSystem.h"
 #include <wrl.h>
 
 TitleScene::~TitleScene() {

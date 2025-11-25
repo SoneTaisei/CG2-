@@ -5,10 +5,6 @@ cbuffer gMaterial : register(b0) {
     Material gMaterial;
 }
 
-cbuffer gDirectionalLight : register(b4) {
-    DirectionalLight gDirectionalLight;
-}
-
 VertexShaderOutput main(VertexShaderInput input,uint32_t instanceID:SV_InstanceID ) {
     VertexShaderOutput output;
     

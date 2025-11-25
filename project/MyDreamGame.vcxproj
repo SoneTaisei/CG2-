@@ -150,7 +150,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Effect\ParticleSystem.cpp" />
+    <ClCompile Include="src\Effect\Particle.cpp" />
+    <ClCompile Include="src\Effect\ParticleCommon.cpp" />
     <ClCompile Include="src\Model\ModelCommon.cpp" />
     <ClCompile Include="src\DirectXCommon\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
@@ -231,7 +232,8 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Effect\ParticleSystem.h" />
+    <ClInclude Include="src\Effect\Particle.h" />
+    <ClInclude Include="src\Effect\ParticleCommon.h" />
     <ClInclude Include="src\Model\ModelCommon.h" />
     <ClInclude Include="src\Core\TimeManager.h" />
     <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />

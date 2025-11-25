@@ -3,13 +3,20 @@
 #include <Windows.h>
 #include <cstdint>
 #include <string>
-#include "Scene/SceneManager.h"
 #include <memory>
+#include <d3d12.h>
+#include <wrl.h>
+
+#include "Scene/SceneManager.h"
 #include "Graphics/DebugCamera.h" 
 #include "Utility/Utilityfunctions.h"
 #include "DirectXCommon/DirectXCommon.h"
 #include "DirectXCommon/D3DResourceLeakChecker.h"
 #include "Sprite/SpriteCommon.h"
+#include "Model/ModelCommon.h"
+
+#include "Effect/ParticleCommon.h"
+#include "Effect/Particle.h"
 
 class WindowsApplication {
 public:
@@ -38,38 +45,25 @@ private:
 	// モデル共通部のメンバ変数
 	std::unique_ptr<ModelCommon> modelCommon_;
 
+	// パーティクル共通部・個別パーティクル
+	std::unique_ptr<ParticleCommon> particleCommon_;
+	std::unique_ptr<Particle> particle_;
+
 	// --- DirectX関連以外のメンバ変数 ---
 	std::unique_ptr<SceneManager> sceneManager_;
 
 	std::unique_ptr<DebugCamera> debugCamera_;
+
+	// ViewProjection用 (シーン全体で使うため残す)
 	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource_;
 	ViewProjection *viewProjectionData_ = nullptr;
 
+	// DirectionalLight用 (シーン全体で使うため残す)
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_;
 	DirectionalLight *directionalLightData_ = nullptr;
-
-	const UINT materialBufferSize = {};
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = {};
-	Material *materialData = nullptr;
-
-	ModelData modelData_;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = {};
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
-	TransformMatrix *instancingData_ = nullptr;
-	static const int kParticleCount = 10;
-
-	uint32_t textureIndex_ = 0;
-
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> particleRootSignature_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> particlePipelineState_;
-
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
 
 #ifdef _DEBUG
 // リソースリークチェッカー
 	std::unique_ptr<D3DResourceLeakChecker> leakChecker_;
 #endif
 };
-

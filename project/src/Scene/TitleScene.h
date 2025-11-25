@@ -5,6 +5,7 @@
 #include "Sprite/Sprite.h"
 #include "Utility/Utilityfunctions.h"
 #include <memory>
+#include "Effect/ParticleSystem.h"
 
 class TitleScene : public IScene {
 public:
@@ -21,4 +22,5 @@ private:
 
     std::vector<std::unique_ptr<Model>> models_;
     std::vector<std::unique_ptr<Sprite>> sprites_;
+
 };

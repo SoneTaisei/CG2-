@@ -1,5 +1,5 @@
 #include "Particle.hlsli"
-StructuredBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
+StructuredBuffer<TransformationMatrix> gTransformationMatrix : register(t0);
 
 cbuffer gMaterial : register(b0) {
     Material gMaterial;
@@ -9,15 +9,12 @@ cbuffer gDirectionalLight : register(b4) {
     DirectionalLight gDirectionalLight;
 }
 
-VertexShaderOutput main(VertexShaderInput input, int32_t instanceId : SV_InstanceID) {
+VertexShaderOutput main(VertexShaderInput input,uint32_t instanceID:SV_InstanceID ) {
     VertexShaderOutput output;
     
-    // これで下の計算式にある gTransformationMatrix が使えるようになります
-    TransformationMatrix gTransformationMatrices[] = gTransformationMatrices[instanceId];
-    
-    output.position = mul(input.position, gTransformationMatrices[instanceId].WVP);
+    output.position = mul(input.position, gTransformationMatrix[instanceID].WVP);
     output.texcoord = input.texcoord;
-    output.normal = normalize(mul(input.normal, (float3x3) gTransformationMatrices[instanceId].World));
+    output.normal = normalize(mul(input.normal, (float3x3) gTransformationMatrix[instanceID].World));
     
     return output;
 }

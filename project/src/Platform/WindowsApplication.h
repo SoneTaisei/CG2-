@@ -52,6 +52,21 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = {};
 	Material *materialData = nullptr;
 
+	ModelData modelData_;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = {};
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
+	TransformMatrix *instancingData_ = nullptr;
+	static const int kParticleCount = 10;
+
+	uint32_t textureIndex_ = 0;
+
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> particleRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> particlePipelineState_;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_;
+
 #ifdef _DEBUG
 // リソースリークチェッカー
 	std::unique_ptr<D3DResourceLeakChecker> leakChecker_;

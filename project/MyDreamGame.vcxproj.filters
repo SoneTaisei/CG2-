@@ -3,6 +3,8 @@
   <ItemGroup>
     <FxCompile Include="shaders\Object3d.PS.hlsl" />
     <FxCompile Include="shaders\Object3d.VS.hlsl" />
+    <FxCompile Include="shaders\Particle.VS.hlsl" />
+    <FxCompile Include="shaders\Particle.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Scene\SceneManager.cpp" />
@@ -34,6 +36,7 @@
     <ClCompile Include="src\DirectXCommon\DirectXCommon.cpp" />
     <ClCompile Include="src\DirectXCommon\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="src\Model\ModelCommon.cpp" />
+    <ClCompile Include="src\Effect\ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Scene\SceneManager.h" />
@@ -69,6 +72,7 @@
     <ClInclude Include="src\DirectXCommon\D3DResourceLeakChecker.h" />
     <ClInclude Include="src\Core\TimeManager.h" />
     <ClInclude Include="src\Model\ModelCommon.h" />
+    <ClInclude Include="src\Effect\ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -80,5 +84,8 @@
     <Filter Include="Aprication">
       <UniqueIdentifier>{448cf43c-7645-438d-b0dc-40d10a8a8f31}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\Particle.hlsli" />
   </ItemGroup>
 </Project>

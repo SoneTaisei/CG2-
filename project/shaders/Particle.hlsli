@@ -1,4 +1,5 @@
 #define int32_t int
+#define uint32_t uint
 struct VertexShaderOutput {
     float4 position : SV_POSITION;
     float2 texcoord : TEXCOORD0;
@@ -23,14 +24,14 @@ struct TransformationMatrix {
 };
 
 struct DirectionalLight {
-    float4 color; //!< ライトの色
-    float3 direction; //!< ライトの向き
-    float intensity; //!< 光度
+    float4 color;
+    float3 direction;
+    float intensity;
 };
 
 struct ViewProjection {
-    matrix viewProjectionMatrix; // ビュー・プロジェクション行列
-    float3 cameraPosition; // カメラの位置
-    float padding; // パディング（16バイト単位のため）
+    matrix viewProjectionMatrix;
+    float3 cameraPosition;
+    float padding;
 };
 

@@ -150,6 +150,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Graphics\GameCamera.cpp" />
+    <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Effect\Particle.cpp" />
     <ClCompile Include="src\Effect\ParticleCommon.cpp" />
     <ClCompile Include="src\Model\ModelCommon.cpp" />
@@ -232,6 +234,8 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Graphics\GameCamera.h" />
+    <ClInclude Include="src\Graphics\Camera.h" />
     <ClInclude Include="src\Effect\Particle.h" />
     <ClInclude Include="src\Effect\ParticleCommon.h" />
     <ClInclude Include="src\Model\ModelCommon.h" />

@@ -38,6 +38,8 @@
     <ClCompile Include="src\Model\ModelCommon.cpp" />
     <ClCompile Include="src\Effect\Particle.cpp" />
     <ClCompile Include="src\Effect\ParticleCommon.cpp" />
+    <ClCompile Include="src\Graphics\Camera.cpp" />
+    <ClCompile Include="src\Graphics\GameCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Scene\SceneManager.h" />
@@ -75,6 +77,8 @@
     <ClInclude Include="src\Model\ModelCommon.h" />
     <ClInclude Include="src\Effect\Particle.h" />
     <ClInclude Include="src\Effect\ParticleCommon.h" />
+    <ClInclude Include="src\Graphics\Camera.h" />
+    <ClInclude Include="src\Graphics\GameCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

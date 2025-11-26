@@ -9,6 +9,7 @@
 
 #include "Scene/SceneManager.h"
 #include "Graphics/DebugCamera.h" 
+#include "Graphics/GameCamera.h" 
 #include "Utility/Utilityfunctions.h"
 #include "DirectXCommon/DirectXCommon.h"
 #include "DirectXCommon/D3DResourceLeakChecker.h"
@@ -52,7 +53,15 @@ private:
 	// --- DirectX関連以外のメンバ変数 ---
 	std::unique_ptr<SceneManager> sceneManager_;
 
+	// 2つのカメラの実体を持つ（メモリ管理用）
+	std::unique_ptr<GameCamera> gameCamera_;
 	std::unique_ptr<DebugCamera> debugCamera_;
+
+	// 「現在アクティブなカメラ」を指すポインタ（借用）
+	Camera *activeCamera_ = nullptr;
+
+	// 今デバッグモードかどうか
+	bool isDebugCameraActive_ = false;
 
 	// ViewProjection用 (シーン全体で使うため残す)
 	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource_;

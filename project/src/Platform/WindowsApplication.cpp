@@ -131,12 +131,17 @@ void WindowsApplication::Initialize() {
 	directionalLightData_->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData_->intensity = 1.0f;
 
-	// デバッグカメラの初期化
+	// 1. 本番カメラ生成
+	gameCamera_ = std::make_unique<GameCamera>();
+	gameCamera_->Initialize(kWindowWidth_, kWindowHeight_);
+
+	// 2. デバッグカメラ生成
 	debugCamera_ = std::make_unique<DebugCamera>();
-	Matrix4x4 initViewMatrix = TransformFunctions::MakeIdentity4x4();
-	float aspect = float(kWindowWidth_) / float(kWindowHeight_);
-	Matrix4x4 initProjectionMatrix = TransformFunctions::MakePerspectiveFovMatrix(0.45f, aspect, 0.1f, 100.0f);
-	debugCamera_->Initialize(initViewMatrix, initProjectionMatrix, kWindowWidth_, kWindowHeight_);
+	debugCamera_->Initialize(kWindowWidth_, kWindowHeight_);
+
+	// 3. 最初は「本番カメラ」をアクティブにする
+	activeCamera_ = gameCamera_.get();
+	isDebugCameraActive_ = false;
 
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -188,10 +193,40 @@ void WindowsApplication::Run() {
 
 			KeyboardInput::GetInstance()->Update();
 
-			// カメラの更新
-			debugCamera_->Update();
+		#ifdef _DEBUG
+			if(KeyboardInput::GetInstance()->IsKeyPressed(DIK_F3)) {
+				if(isDebugCameraActive_) {
+					// ▼▼▼ デバッグ → ゲームに戻る時 ▼▼▼
+
+					// 【重要】ここで座標のコピーをしてはいけません！
+					// 何もしなければ、GameCameraはずっと待機していた場所（元の位置）にいます。
+
+					activeCamera_ = gameCamera_.get(); // 指名を変えるだけ
+					isDebugCameraActive_ = false;
+
+				} else {
+					// ▼▼▼ ゲーム → デバッグに行く時 ▼▼▼
+
+					// こちらは「今のゲーム画面の位置」からデバッグ操作を始めたいので
+					// GameCamera の場所を DebugCamera にコピーします。
+					debugCamera_->SetTranslation(gameCamera_->GetTranslation());
+					debugCamera_->SetRotation(gameCamera_->GetRotation());
+
+					activeCamera_ = debugCamera_.get(); // 指名を変える
+					isDebugCameraActive_ = true;
+				}
+			}
+		#endif
+
+		// ★ 5. アクティブなカメラだけを更新する
+		// デバッグカメラならマウス操作、本番カメラなら追従処理が走る
+			if(isDebugCameraActive_) {
+				debugCamera_->Update();
+			} else {
+				gameCamera_->Update();
+			}
 			// ViewProjectionを更新
-			Matrix4x4 viewMatrix = debugCamera_->GetViewMatrix();
+			Matrix4x4 viewMatrix = activeCamera_->GetViewMatrix();
 			Matrix4x4 projectionMatrix = debugCamera_->GetProjectionMatrix();
 			viewProjectionData_->viewProjectionMatrix = TransformFunctions::Multiply(viewMatrix, projectionMatrix);
 			viewProjectionData_->cameraPosition = debugCamera_->GetTranslation();
